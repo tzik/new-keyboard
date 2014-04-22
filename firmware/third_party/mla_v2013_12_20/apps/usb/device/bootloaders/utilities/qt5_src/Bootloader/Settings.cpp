@@ -31,7 +31,7 @@
 #include "Settings.h"
 #include "ui_Settings.h"
 
-#include <QtWidgets/QMessageBox>
+#include <QMessageBox>
 
 Settings::Settings(QWidget *parent) : QDialog(parent), m_ui(new Ui::Settings)
 {

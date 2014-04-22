@@ -31,9 +31,9 @@
 #ifndef SETTINGS_H
 #define SETTINGS_H
 
-#include <QtWidgets/QDialog>
+#include <QDialog>
 //#include <hidapi.h>
-#include <QtWidgets/QComboBox>
+#include <QComboBox>
 
 namespace Ui {
     class Settings;

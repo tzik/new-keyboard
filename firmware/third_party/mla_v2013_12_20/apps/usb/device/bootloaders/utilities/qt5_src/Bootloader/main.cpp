@@ -28,7 +28,7 @@
 * E. Schlunder  2009/04/14  Initial code ported from VB app.
 ************************************************************************/
 
-#include <QtWidgets/QApplication>
+#include <QApplication>
 #include "MainWindow.h"
 
 int main(int argc, char *argv[])

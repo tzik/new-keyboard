@@ -27,12 +27,12 @@
 #ifndef MAINWINDOW_H
 #define MAINWINDOW_H
 
-#include <QtWidgets/QMainWindow>
-#include <QtWidgets/QLabel>
+#include <QMainWindow>
+#include <QLabel>
 #include <QFileInfo>
 #include <QFileSystemWatcher>
 #include <QtCore/QProcess>
-#include <QtWidgets/QMenu>
+#include <QMenu>
 #include <QFuture>
 
 #include "Comm.h"

@@ -10,20 +10,20 @@
 #define UI_MAINWINDOW_H
 
 #include <QtCore/QVariant>
-#include <QtWidgets/QAction>
-#include <QtWidgets/QApplication>
-#include <QtWidgets/QButtonGroup>
-#include <QtWidgets/QFrame>
-#include <QtWidgets/QGridLayout>
-#include <QtWidgets/QHeaderView>
-#include <QtWidgets/QMainWindow>
-#include <QtWidgets/QMenu>
-#include <QtWidgets/QMenuBar>
-#include <QtWidgets/QPlainTextEdit>
-#include <QtWidgets/QProgressBar>
-#include <QtWidgets/QStatusBar>
-#include <QtWidgets/QToolBar>
-#include <QtWidgets/QWidget>
+#include <QAction>
+#include <QApplication>
+#include <QButtonGroup>
+#include <QFrame>
+#include <QGridLayout>
+#include <QHeaderView>
+#include <QMainWindow>
+#include <QMenu>
+#include <QMenuBar>
+#include <QPlainTextEdit>
+#include <QProgressBar>
+#include <QStatusBar>
+#include <QToolBar>
+#include <QWidget>
 
 QT_BEGIN_NAMESPACE
 
@@ -54,88 +54,88 @@ public:
     void setupUi(QMainWindow *MainWindowClass)
     {
         if (MainWindowClass->objectName().isEmpty())
-            MainWindowClass->setObjectName(QStringLiteral("MainWindowClass"));
+            MainWindowClass->setObjectName(("MainWindowClass"));
         MainWindowClass->resize(439, 403);
         QSizePolicy sizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
         sizePolicy.setHorizontalStretch(0);
         sizePolicy.setVerticalStretch(0);
         sizePolicy.setHeightForWidth(MainWindowClass->sizePolicy().hasHeightForWidth());
         MainWindowClass->setSizePolicy(sizePolicy);
-        MainWindowClass->setWindowTitle(QStringLiteral("USB HID Bootloader"));
+        MainWindowClass->setWindowTitle(("USB HID Bootloader"));
         QIcon icon;
-        icon.addFile(QStringLiteral(":/MainWindow/img/Microchip_logo.Ico"), QSize(), QIcon::Normal, QIcon::Off);
+        icon.addFile((":/MainWindow/img/Microchip_logo.Ico"), QSize(), QIcon::Normal, QIcon::Off);
         MainWindowClass->setWindowIcon(icon);
         actionOpen = new QAction(MainWindowClass);
-        actionOpen->setObjectName(QStringLiteral("actionOpen"));
+        actionOpen->setObjectName(("actionOpen"));
         actionOpen->setEnabled(false);
         QIcon icon1;
-        icon1.addFile(QStringLiteral(":/MainWindow/img/open.png"), QSize(), QIcon::Normal, QIcon::Off);
+        icon1.addFile((":/MainWindow/img/open.png"), QSize(), QIcon::Normal, QIcon::Off);
         actionOpen->setIcon(icon1);
         actionExit = new QAction(MainWindowClass);
-        actionExit->setObjectName(QStringLiteral("actionExit"));
+        actionExit->setObjectName(("actionExit"));
         actionWrite_Device = new QAction(MainWindowClass);
-        actionWrite_Device->setObjectName(QStringLiteral("actionWrite_Device"));
+        actionWrite_Device->setObjectName(("actionWrite_Device"));
         actionWrite_Device->setEnabled(false);
         QIcon icon2;
-        icon2.addFile(QStringLiteral(":/MainWindow/img/writetqfp.png"), QSize(), QIcon::Normal, QIcon::Off);
+        icon2.addFile((":/MainWindow/img/writetqfp.png"), QSize(), QIcon::Normal, QIcon::Off);
         actionWrite_Device->setIcon(icon2);
         actionErase_Device = new QAction(MainWindowClass);
-        actionErase_Device->setObjectName(QStringLiteral("actionErase_Device"));
+        actionErase_Device->setObjectName(("actionErase_Device"));
         actionErase_Device->setEnabled(false);
         QIcon icon3;
-        icon3.addFile(QStringLiteral(":/MainWindow/img/erasetqfp.png"), QSize(), QIcon::Normal, QIcon::Off);
+        icon3.addFile((":/MainWindow/img/erasetqfp.png"), QSize(), QIcon::Normal, QIcon::Off);
         actionErase_Device->setIcon(icon3);
         actionErase_Device->setVisible(false);
         action_About = new QAction(MainWindowClass);
-        action_About->setObjectName(QStringLiteral("action_About"));
+        action_About->setObjectName(("action_About"));
         QIcon icon4;
-        icon4.addFile(QStringLiteral(":/MainWindow/img/help.png"), QSize(), QIcon::Normal, QIcon::Off);
+        icon4.addFile((":/MainWindow/img/help.png"), QSize(), QIcon::Normal, QIcon::Off);
         action_About->setIcon(icon4);
         action_Verify_Device = new QAction(MainWindowClass);
-        action_Verify_Device->setObjectName(QStringLiteral("action_Verify_Device"));
+        action_Verify_Device->setObjectName(("action_Verify_Device"));
         action_Verify_Device->setEnabled(false);
         QIcon icon5;
-        icon5.addFile(QStringLiteral(":/MainWindow/img/verify.png"), QSize(), QIcon::Normal, QIcon::Off);
+        icon5.addFile((":/MainWindow/img/verify.png"), QSize(), QIcon::Normal, QIcon::Off);
         action_Verify_Device->setIcon(icon5);
         action_Verify_Device->setVisible(false);
         action_Settings = new QAction(MainWindowClass);
-        action_Settings->setObjectName(QStringLiteral("action_Settings"));
+        action_Settings->setObjectName(("action_Settings"));
         action_Settings->setEnabled(false);
         actionReset_Device = new QAction(MainWindowClass);
-        actionReset_Device->setObjectName(QStringLiteral("actionReset_Device"));
+        actionReset_Device->setObjectName(("actionReset_Device"));
         actionReset_Device->setEnabled(false);
         QIcon icon6;
-        icon6.addFile(QStringLiteral(":/MainWindow/img/Reset.png"), QSize(), QIcon::Normal, QIcon::Off);
+        icon6.addFile((":/MainWindow/img/Reset.png"), QSize(), QIcon::Normal, QIcon::Off);
         actionReset_Device->setIcon(icon6);
         actionBlank_Check = new QAction(MainWindowClass);
-        actionBlank_Check->setObjectName(QStringLiteral("actionBlank_Check"));
+        actionBlank_Check->setObjectName(("actionBlank_Check"));
         actionBlank_Check->setEnabled(false);
         QIcon icon7;
-        icon7.addFile(QStringLiteral(":/MainWindow/img/BlankCheck.png"), QSize(), QIcon::Normal, QIcon::Off);
+        icon7.addFile((":/MainWindow/img/BlankCheck.png"), QSize(), QIcon::Normal, QIcon::Off);
         actionBlank_Check->setIcon(icon7);
         actionBlank_Check->setVisible(false);
         centralWidget = new QWidget(MainWindowClass);
-        centralWidget->setObjectName(QStringLiteral("centralWidget"));
+        centralWidget->setObjectName(("centralWidget"));
         gridLayout = new QGridLayout(centralWidget);
         gridLayout->setSpacing(6);
         gridLayout->setContentsMargins(11, 11, 11, 11);
-        gridLayout->setObjectName(QStringLiteral("gridLayout"));
+        gridLayout->setObjectName(("gridLayout"));
         progressBar = new QProgressBar(centralWidget);
-        progressBar->setObjectName(QStringLiteral("progressBar"));
+        progressBar->setObjectName(("progressBar"));
         progressBar->setValue(0);
         progressBar->setTextVisible(false);
 
         gridLayout->addWidget(progressBar, 0, 0, 1, 1);
 
         line = new QFrame(centralWidget);
-        line->setObjectName(QStringLiteral("line"));
+        line->setObjectName(("line"));
         line->setFrameShape(QFrame::HLine);
         line->setFrameShadow(QFrame::Sunken);
 
         gridLayout->addWidget(line, 1, 0, 1, 1);
 
         plainTextEdit = new QPlainTextEdit(centralWidget);
-        plainTextEdit->setObjectName(QStringLiteral("plainTextEdit"));
+        plainTextEdit->setObjectName(("plainTextEdit"));
         plainTextEdit->setMinimumSize(QSize(350, 0));
         plainTextEdit->setReadOnly(true);
 
@@ -143,20 +143,20 @@ public:
 
         MainWindowClass->setCentralWidget(centralWidget);
         menuBar = new QMenuBar(MainWindowClass);
-        menuBar->setObjectName(QStringLiteral("menuBar"));
+        menuBar->setObjectName(("menuBar"));
         menuBar->setGeometry(QRect(0, 0, 439, 19));
         menuFile = new QMenu(menuBar);
-        menuFile->setObjectName(QStringLiteral("menuFile"));
+        menuFile->setObjectName(("menuFile"));
         menuProgrammer = new QMenu(menuBar);
-        menuProgrammer->setObjectName(QStringLiteral("menuProgrammer"));
+        menuProgrammer->setObjectName(("menuProgrammer"));
         menu_Help = new QMenu(menuBar);
-        menu_Help->setObjectName(QStringLiteral("menu_Help"));
+        menu_Help->setObjectName(("menu_Help"));
         MainWindowClass->setMenuBar(menuBar);
         statusBar = new QStatusBar(MainWindowClass);
-        statusBar->setObjectName(QStringLiteral("statusBar"));
+        statusBar->setObjectName(("statusBar"));
         MainWindowClass->setStatusBar(statusBar);
         mainToolBar = new QToolBar(MainWindowClass);
-        mainToolBar->setObjectName(QStringLiteral("mainToolBar"));
+        mainToolBar->setObjectName(("mainToolBar"));
         mainToolBar->setMovable(false);
         mainToolBar->setFloatable(false);
         MainWindowClass->addToolBar(Qt::TopToolBarArea, mainToolBar);

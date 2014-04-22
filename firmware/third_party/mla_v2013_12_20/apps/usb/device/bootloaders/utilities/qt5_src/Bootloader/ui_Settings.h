@@ -10,14 +10,14 @@
 #define UI_SETTINGS_H
 
 #include <QtCore/QVariant>
-#include <QtWidgets/QAction>
-#include <QtWidgets/QApplication>
-#include <QtWidgets/QButtonGroup>
-#include <QtWidgets/QCheckBox>
-#include <QtWidgets/QDialog>
-#include <QtWidgets/QDialogButtonBox>
-#include <QtWidgets/QGroupBox>
-#include <QtWidgets/QHeaderView>
+#include <QAction>
+#include <QApplication>
+#include <QButtonGroup>
+#include <QCheckBox>
+#include <QDialog>
+#include <QDialogButtonBox>
+#include <QGroupBox>
+#include <QHeaderView>
 
 QT_BEGIN_NAMESPACE
 
@@ -33,27 +33,27 @@ public:
     void setupUi(QDialog *Settings)
     {
         if (Settings->objectName().isEmpty())
-            Settings->setObjectName(QStringLiteral("Settings"));
+            Settings->setObjectName(("Settings"));
         Settings->resize(402, 190);
         QIcon icon;
-        icon.addFile(QStringLiteral(":/MainWindow/img/microchip.png"), QSize(), QIcon::Normal, QIcon::Off);
+        icon.addFile((":/MainWindow/img/microchip.png"), QSize(), QIcon::Normal, QIcon::Off);
         Settings->setWindowIcon(icon);
         buttonBox = new QDialogButtonBox(Settings);
-        buttonBox->setObjectName(QStringLiteral("buttonBox"));
+        buttonBox->setObjectName(("buttonBox"));
         buttonBox->setGeometry(QRect(30, 150, 341, 32));
         buttonBox->setOrientation(Qt::Horizontal);
         buttonBox->setStandardButtons(QDialogButtonBox::Cancel|QDialogButtonBox::Ok);
         WriteOptionsGroupBox = new QGroupBox(Settings);
-        WriteOptionsGroupBox->setObjectName(QStringLiteral("WriteOptionsGroupBox"));
+        WriteOptionsGroupBox->setObjectName(("WriteOptionsGroupBox"));
         WriteOptionsGroupBox->setGeometry(QRect(20, 10, 361, 131));
         FlashProgramMemorycheckBox = new QCheckBox(WriteOptionsGroupBox);
-        FlashProgramMemorycheckBox->setObjectName(QStringLiteral("FlashProgramMemorycheckBox"));
+        FlashProgramMemorycheckBox->setObjectName(("FlashProgramMemorycheckBox"));
         FlashProgramMemorycheckBox->setGeometry(QRect(17, 30, 201, 19));
         ConfigBitsCheckBox = new QCheckBox(WriteOptionsGroupBox);
-        ConfigBitsCheckBox->setObjectName(QStringLiteral("ConfigBitsCheckBox"));
+        ConfigBitsCheckBox->setObjectName(("ConfigBitsCheckBox"));
         ConfigBitsCheckBox->setGeometry(QRect(17, 60, 201, 19));
         EepromCheckBox = new QCheckBox(WriteOptionsGroupBox);
-        EepromCheckBox->setObjectName(QStringLiteral("EepromCheckBox"));
+        EepromCheckBox->setObjectName(("EepromCheckBox"));
         EepromCheckBox->setGeometry(QRect(16, 90, 201, 19));
 
         retranslateUi(Settings);

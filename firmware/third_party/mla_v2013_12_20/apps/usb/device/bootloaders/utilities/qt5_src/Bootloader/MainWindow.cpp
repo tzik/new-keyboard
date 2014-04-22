@@ -36,11 +36,11 @@
 #include <QByteArray>
 #include <QList>
 #include <QTime>
-#include <QtWidgets/QFileDialog>
-#include <QtWidgets/QMessageBox>
+#include <QFileDialog>
+#include <QMessageBox>
 #include <QSettings>
-#include <QtWidgets/QDesktopWidget>
-#include <QtConcurrent/QtConcurrentRun>
+#include <QDesktopWidget>
+#include <QtCore/QtConcurrentRun>
 
 #include "MainWindow.h"
 #include "ui_MainWindow.h"
