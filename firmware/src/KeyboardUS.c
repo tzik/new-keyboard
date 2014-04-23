@@ -23,9 +23,7 @@ static unsigned char const baseKeys[BASE_MAX + 1][5] =
 {
     {KEY_U, KEY_S, KEY_ENTER},
     {KEY_U, KEY_S, KEY_MINUS, KEY_D, KEY_ENTER},
-    {KEY_U, KEY_S, KEY_MINUS, KEY_C, KEY_ENTER},
-    {KEY_J, KEY_P, KEY_ENTER},
-    {KEY_J, KEY_P, KEY_MINUS, KEY_N, KEY_ENTER},
+    {KEY_T, KEY_Z, KEY_I, KEY_K, KEY_ENTER},
 };
 
 static unsigned char const matrixQwerty[8][12] =
@@ -52,57 +50,17 @@ static unsigned char const matrixDvorak[8][12] =
     KEY_LEFTCONTROL, KEY_LEFT_GUI, KEY_FN, KEY_LEFTSHIFT, KEY_BACKSPACE, KEY_LEFTALT, KEY_RIGHTALT, KEY_SPACEBAR, KEY_RIGHTSHIFT, KEY_FN, KEY_RIGHT_GUI, KEY_RIGHTCONTROL
 };
 
-static unsigned char const matrixColemak[8][12] =
+// Tzik's custom.
+static unsigned char const matrixTzik[8][12] =
 {
-    KEY_LEFT_BRACKET, KEY_F2, KEY_F3, KEY_F4, KEY_F5, KEY_F6, KEY_F7, KEY_F8, KEY_F9, KEY_F10, KEY_F11, KEY_EQUAL,
-    KEY_GRAVE_ACCENT, KEY_F1, 0, 0, 0, 0, 0, 0, 0, 0, KEY_F12, KEY_BACKSLASH,
-    KEY_RIGHT_BRACKET, KEY_1, 0, 0, 0, 0, 0, 0, 0, 0, KEY_0, KEY_MINUS,
-    KEY_BACKSPACE, KEY_2, KEY_3, KEY_4, KEY_5, 0, 0, KEY_6, KEY_7, KEY_8, KEY_9, KEY_QUOTE,
-    KEY_Q, KEY_W, KEY_F, KEY_P, KEY_G, 0, 0, KEY_J, KEY_L, KEY_U, KEY_Y, KEY_SEMICOLON,
-    KEY_A, KEY_R, KEY_S, KEY_T, KEY_D, KEY_ESCAPE, KEY_APPLICATION, KEY_H, KEY_N, KEY_E, KEY_I, KEY_O,
-    KEY_Z, KEY_X, KEY_C, KEY_V, KEY_B, KEY_TAB, KEY_ENTER, KEY_K, KEY_M, KEY_COMMA, KEY_PERIOD, KEY_SLASH,
-    KEY_LEFTCONTROL, KEY_LEFT_GUI, KEY_FN, KEY_LEFTSHIFT, KEY_SPACEBAR, KEY_LEFTALT, KEY_RIGHTALT, KEY_SPACEBAR, KEY_RIGHTSHIFT, KEY_FN, KEY_RIGHT_GUI, KEY_RIGHTCONTROL
-};
-
-//
-// Japanese layouts
-//
-// [{   KEY_RIGHT_BRACKET
-// ]}   KEY_NON_US_HASH
-// \|   KEY_INTERNATIONAL3
-// @`   KEY_LEFT_BRACKET
-// -=   KEY_MINUS
-// :*   KEY_QUOTE
-// ^~   KEY_EQUAL
-//  _   KEY_INTERNATIONAL1
-// no-convert   KEY_INTERNATIONAL5
-// convert      KEY_INTERNATIONAL4
-// hiragana     KEY_INTERNATIONAL2
-// zenkaku      KEY_GRAVE_ACCENT
-//
-
-static unsigned char const matrixJIS[8][12] =
-{
-    KEY_RIGHT_BRACKET, KEY_F2, KEY_F3, KEY_F4, KEY_F5, KEY_F6, KEY_F7, KEY_F8, KEY_F9, KEY_F10, KEY_F11, KEY_EQUAL,
-    KEY_INTERNATIONAL3, KEY_F1, 0, 0, 0, 0, 0, 0, 0, 0, KEY_F12, KEY_LEFT_BRACKET,
-    KEY_NON_US_HASH, KEY_1, 0, 0, 0, 0, 0, 0, 0, 0, KEY_0, KEY_MINUS,
-    KEY_CAPS_LOCK, KEY_2, KEY_3, KEY_4, KEY_5, 0, 0, KEY_6, KEY_7, KEY_8, KEY_9, KEY_QUOTE,
-    KEY_Q, KEY_W, KEY_E, KEY_R, KEY_T, 0, 0, KEY_Y, KEY_U, KEY_I, KEY_O, KEY_P,
-    KEY_A, KEY_S, KEY_D, KEY_F, KEY_G, KEY_ESCAPE, KEY_APPLICATION, KEY_H, KEY_J, KEY_K, KEY_L, KEY_SEMICOLON,
-    KEY_Z, KEY_X, KEY_C, KEY_V, KEY_B, KEY_TAB, KEY_ENTER, KEY_N, KEY_M, KEY_COMMA, KEY_PERIOD, KEY_SLASH,
-    KEY_LEFTCONTROL, KEY_LEFT_GUI, KEY_FN, KEY_LEFTSHIFT, KEY_BACKSPACE, KEY_LEFTALT, KEY_RIGHTALT, KEY_SPACEBAR, KEY_RIGHTSHIFT, KEY_FN, KEY_RIGHT_GUI, KEY_RIGHTCONTROL
-};
-
-static unsigned char const matrixNicolaF[8][12] =
-{
-    KEY_RIGHT_BRACKET, KEY_F2, KEY_F3, KEY_F4, KEY_F5, KEY_F6, KEY_F7, KEY_F8, KEY_F9, KEY_F10, KEY_F11, KEY_MINUS,
-    KEY_INTERNATIONAL3, KEY_F1, 0, 0, 0, 0, 0, 0, 0, 0, KEY_F12, KEY_LEFT_BRACKET,
-    KEY_NON_US_HASH, KEY_1, 0, 0, 0, 0, 0, 0, 0, 0, KEY_0, KEY_QUOTE,
-    KEY_EQUAL, KEY_2, KEY_3, KEY_4, KEY_5, 0, 0, KEY_6, KEY_7, KEY_8, KEY_9, KEY_BACKSPACE,
-    KEY_Q, KEY_W, KEY_E, KEY_R, KEY_T, 0, 0, KEY_Y, KEY_U, KEY_I, KEY_O, KEY_P,
-    KEY_A, KEY_S, KEY_D, KEY_F, KEY_G, KEY_ESCAPE, KEY_APPLICATION, KEY_H, KEY_J, KEY_K, KEY_L, KEY_SEMICOLON,
-    KEY_Z, KEY_X, KEY_C, KEY_V, KEY_B, KEY_TAB, KEY_ENTER, KEY_N, KEY_M, KEY_COMMA, KEY_PERIOD, KEY_SLASH,
-    KEY_LEFTCONTROL, KEY_LEFT_GUI, KEY_FN, KEY_LEFTSHIFT, KEY_ENTER, KEY_LEFTALT, KEY_RIGHTALT, KEY_SPACEBAR, KEY_RIGHTSHIFT, KEY_FN, KEY_RIGHT_GUI, KEY_RIGHTCONTROL
+    KEY_LEFT_BRACKET, KEY_F2, KEY_F3, KEY_F4, KEY_F5, KEY_F6, KEY_F7, KEY_F8, KEY_F9, KEY_F10, KEY_F11, KEY_BACKSLASH,
+    KEY_GRAVE_ACCENT, KEY_F1, 0, 0, 0, 0, 0, 0, 0, 0, KEY_F12, KEY_EQUAL,
+    KEY_RIGHT_BRACKET, KEY_1, 0, 0, 0, 0, 0, 0, 0, 0, KEY_0, KEY_SLASH,
+    KEY_LEFTCONTROL, KEY_2, KEY_3, KEY_4, KEY_5, 0, 0, KEY_6, KEY_7, KEY_8, KEY_9, KEY_MINUS,
+    KEY_QUOTE, KEY_COMMA, KEY_PERIOD, KEY_P, KEY_Y, 0, 0, KEY_F, KEY_G, KEY_C, KEY_R, KEY_L,
+    KEY_A, KEY_O, KEY_E, KEY_U, KEY_I, KEY_ESCAPE, KEY_APPLICATION, KEY_D, KEY_H, KEY_T, KEY_N, KEY_S,
+    KEY_SEMICOLON, KEY_Q, KEY_J, KEY_K, KEY_X, KEY_LEFTALT, KEY_CAPS_LOCK, KEY_B, KEY_M, KEY_W, KEY_V, KEY_Z,
+    KEY_LEFTSHIFT, KEY_LEFT_GUI, KEY_FN, KEY_SPACEBAR, KEY_ENTER, KEY_RIGHTCONTROL, KEY_RIGHTALT, KEY_TAB, KEY_BACKSPACE, KEY_FN, KEY_RIGHT_GUI, KEY_RIGHTSHIFT
 };
 
 static unsigned char mode;
@@ -140,7 +98,7 @@ char isDigit(unsigned char code)
 
 char isJP(void)
 {
-    return mode == BASE_JIS || mode == BASE_NICOLA_F;
+    return 0;
 }
 
 char processKeysBase(const unsigned char* current, const unsigned char* processed, unsigned char* report)
@@ -181,14 +139,8 @@ unsigned char getKeyBase(unsigned char code)
     case BASE_DVORAK:
         key = matrixDvorak[code / 12][code % 12];
         break;
-    case BASE_COLEMAK:
-        key = matrixColemak[code / 12][code % 12];
-        break;
-    case BASE_JIS:
-        key = matrixJIS[code / 12][code % 12];
-        break;
-    case BASE_NICOLA_F:
-        key = matrixNicolaF[code / 12][code % 12];
+    case BASE_TZIK:
+        key = matrixTzik[code / 12][code % 12];
         break;
     default:
         key = matrixQwerty[code / 12][code % 12];
