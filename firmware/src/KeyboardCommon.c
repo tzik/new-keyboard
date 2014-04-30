@@ -22,7 +22,7 @@
 
 #include <system.h>
 
-__EEPROM_DATA(BASE_QWERTY, KANA_ROMAJI, OS_PC, 2 /* delay */, 0 /* mod */, LED_DEFAULT, IME_MS, 0);
+__EEPROM_DATA(BASE_QWERTY, KANA_ROMAJI, OS_PC, 1 /* delay */, 0 /* mod */, LED_DEFAULT, IME_MS, 0);
 
 unsigned char os;
 unsigned char mod;
@@ -43,33 +43,29 @@ static unsigned char const osKeys[OS_MAX + 1][MAX_OS_KEY_NAME] =
     {KEY_S, KEY_MINUS, KEY_S, KEY_P, KEY_ENTER},
 };
 
-#define MAX_MOD             7
+#define MAX_MOD             5
 #define MAX_MOD_KEY_NAME    6
-#define MAX_MOD_KEYS        8
+#define MAX_MOD_KEYS        7
 
-#define isMacMod()  (mod == 3 || mod == 7)
+#define isMacMod()  (mod == 2 || mod == 5)
 
 static unsigned char const modMap[MAX_MOD + 1][MAX_MOD_KEYS] =
 {
-    {KEY_LEFTCONTROL, KEY_LEFTSHIFT, KEY_LEFT_GUI, KEY_LEFTALT, KEY_RIGHTALT, KEY_APPLICATION, KEY_RIGHTSHIFT, KEY_RIGHTCONTROL },
-    {KEY_LEFTCONTROL, KEY_LEFTSHIFT, KEY_LEFTALT, KEY_LANG2, KEY_LANG1, KEY_APPLICATION, KEY_RIGHTSHIFT, KEY_RIGHTCONTROL },
-    {KEY_LEFTCONTROL, KEY_LEFTSHIFT, KEY_LEFTALT, KEY_LANG2, KEY_LANG1, KEY_GRAVE_ACCENT, KEY_RIGHTSHIFT, KEY_RIGHTCONTROL },
-    {KEY_LEFTCONTROL, KEY_LEFTSHIFT, KEY_LEFT_GUI, KEY_LANG2, KEY_LANG1, KEY_APPLICATION, KEY_RIGHTSHIFT, KEY_RIGHTCONTROL },
-    {KEY_LEFTSHIFT, KEY_LEFTCONTROL, KEY_LEFT_GUI, KEY_LEFTALT, KEY_RIGHTALT, KEY_APPLICATION, KEY_RIGHTCONTROL, KEY_RIGHTSHIFT },
-    {KEY_LEFTSHIFT, KEY_LEFTCONTROL, KEY_LEFTALT, KEY_LANG2, KEY_LANG1, KEY_APPLICATION, KEY_RIGHTCONTROL, KEY_RIGHTSHIFT },
-    {KEY_LEFTSHIFT, KEY_LEFTCONTROL, KEY_LEFTALT, KEY_LANG2, KEY_LANG1, KEY_GRAVE_ACCENT, KEY_RIGHTCONTROL, KEY_RIGHTSHIFT },
-    {KEY_LEFTSHIFT, KEY_LEFTCONTROL, KEY_LEFT_GUI, KEY_LANG2, KEY_LANG1, KEY_APPLICATION, KEY_RIGHTCONTROL, KEY_RIGHTSHIFT },
+    {KEY_LEFTCONTROL, KEY_LEFTSHIFT, KEY_LEFT_GUI, KEY_LEFTALT, KEY_RIGHTALT, KEY_RIGHTSHIFT, KEY_RIGHTCONTROL },
+    {KEY_LEFTCONTROL, KEY_LEFTSHIFT, KEY_LEFTALT, KEY_LANG2, KEY_LANG1, KEY_RIGHTSHIFT, KEY_RIGHTCONTROL },
+    {KEY_LEFTCONTROL, KEY_LEFTSHIFT, KEY_LEFT_GUI, KEY_LANG2, KEY_LANG1, KEY_RIGHTSHIFT, KEY_RIGHTCONTROL },
+    {KEY_LEFTSHIFT, KEY_LEFTCONTROL, KEY_LEFT_GUI, KEY_LEFTALT, KEY_RIGHTALT, KEY_RIGHTCONTROL, KEY_RIGHTSHIFT },
+    {KEY_LEFTSHIFT, KEY_LEFTCONTROL, KEY_LEFTALT, KEY_LANG2, KEY_LANG1, KEY_RIGHTCONTROL, KEY_RIGHTSHIFT },
+    {KEY_LEFTSHIFT, KEY_LEFTCONTROL, KEY_LEFT_GUI, KEY_LANG2, KEY_LANG1, KEY_RIGHTCONTROL, KEY_RIGHTSHIFT },
 };
 
 static unsigned char const modKeys[MAX_MOD + 1][MAX_MOD_KEY_NAME] =
 {
     {KEY_C, KEY_ENTER},
     {KEY_C, KEY_J, KEY_ENTER},
-    {KEY_C, KEY_J, KEY_1, KEY_0, KEY_9, KEY_ENTER},
     {KEY_C, KEY_J, KEY_M, KEY_A, KEY_C, KEY_ENTER},
     {KEY_S, KEY_ENTER},
     {KEY_S, KEY_J, KEY_ENTER},
-    {KEY_S, KEY_J, KEY_1, KEY_0, KEY_9, KEY_ENTER},
     {KEY_S, KEY_J, KEY_M, KEY_A, KEY_C, KEY_ENTER},
 };
 
@@ -77,8 +73,8 @@ static unsigned char const matrixFn[8][12][3] =
 {
     {{KEY_INSERT}, {KEY_OS}, {KEY_BASE}, {KEY_KANA}, {KEY_DELAY}, {KEY_MOD}, {KEY_IME}, {KEY_LED}, {0}, {KEY_MUTE}, {KEY_VOLUME_DOWN}, {KEY_PAUSE}},
     {{KEY_LEFTCONTROL, KEY_DELETE}, {KEY_ABOUT}, {0}, {0}, {0}, {0}, {0}, {0}, {0}, {0}, {KEY_VOLUME_UP}, {KEY_SCROLL_LOCK}},
-    {{KEY_LEFTCONTROL, KEY_LEFTSHIFT, KEY_Z}, {0}, {0}, {0}, {0}, {0}, {0}, {0}, {0}, {0}, {0}, {KEY_PRINTSCREEN}},
-    {{KEY_DELETE}, {0}, {0}, {0}, {0}, {0}, {0}, {0}, {KEY_LEFTCONTROL, KEY_LEFTSHIFT, KEY_LEFTARROW}, {KEY_LEFTSHIFT, KEY_UPARROW}, {KEY_LEFTCONTROL, KEY_LEFTSHIFT, KEY_RIGHTARROW}, {KEYPAD_NUM_LOCK}},
+    {{KEY_LEFTCONTROL, KEY_LEFTSHIFT, KEY_Z}, {KEY_LEFTCONTROL, KEY_1}, {0}, {0}, {0}, {0}, {0}, {0}, {0}, {0}, {KEY_LEFTCONTROL, KEY_0}, {KEY_PRINTSCREEN}},
+    {{KEY_DELETE}, {KEY_LEFTCONTROL, KEY_2}, {KEY_LEFTCONTROL, KEY_3}, {KEY_LEFTCONTROL, KEY_4}, {KEY_LEFTCONTROL, KEY_5}, {0}, {0}, {KEY_LEFTCONTROL, KEY_6}, {KEY_LEFTCONTROL, KEY_LEFTSHIFT, KEY_LEFTARROW}, {KEY_LEFTSHIFT, KEY_UPARROW}, {KEY_LEFTCONTROL, KEY_LEFTSHIFT, KEY_RIGHTARROW}, {KEYPAD_NUM_LOCK}},
     {{KEY_LEFTCONTROL, KEY_Q}, {KEY_LEFTCONTROL, KEY_W}, {KEY_PAGEUP}, {KEY_LEFTCONTROL, KEY_R}, {KEY_LEFTCONTROL, KEY_T}, {0}, {0}, {KEY_LEFTCONTROL, KEY_HOME}, {KEY_LEFTCONTROL, KEY_LEFTARROW}, {KEY_UPARROW}, {KEY_LEFTCONTROL, KEY_RIGHTARROW}, {KEY_LEFTCONTROL, KEY_END}},
     {{KEY_LEFTCONTROL, KEY_A}, {KEY_LEFTCONTROL, KEY_S}, {KEY_PAGEDOWN}, {KEY_LEFTCONTROL, KEY_F}, {KEY_LEFTCONTROL, KEY_G}, {KEY_ESCAPE}, {KEY_CAPS_LOCK}, {KEY_HOME}, {KEY_LEFTARROW}, {KEY_DOWNARROW}, {KEY_RIGHTARROW}, {KEY_END}},
     {{KEY_LEFTCONTROL, KEY_Z}, {KEY_LEFTCONTROL, KEY_X}, {KEY_LEFTCONTROL, KEY_C}, {KEY_LEFTCONTROL, KEY_V}, {KEY_LANG2}, {KEY_TAB}, {KEY_ENTER}, {KEY_LANG1}, {KEY_LEFTSHIFT, KEY_LEFTARROW}, {KEY_LEFTSHIFT, KEY_DOWNARROW}, {KEY_LEFTSHIFT, KEY_RIGHTARROW}, {KEY_LEFTSHIFT, KEY_END}},
@@ -424,53 +420,54 @@ static char processKeys(const unsigned char* current, const unsigned char* proce
             const unsigned char* a = getKeyFn(code);
             for (char j = 0; j < 3 && count < 8; ++j) {
                 unsigned char key = a[j];
+                char make = !memchr(processed + 2, code, 6);
                 switch (key) {
                 case 0:
                     break;
                 case KEY_BASE:
-                    if (!memchr(processed + 2, code, 6)) {
+                    if (make) {
                         switchBase();
                         xmit = XMIT_MACRO;
                     }
                     break;
                 case KEY_KANA:
-                    if (!memchr(processed + 2, code, 6)) {
+                    if (make) {
                         switchKana();
                         xmit = XMIT_MACRO;
                     }
                     break;
                 case KEY_OS:
-                    if (!memchr(processed + 2, code, 6)) {
+                    if (make) {
                         switchOS();
                         xmit = XMIT_MACRO;
                     }
                     break;
                 case KEY_DELAY:
-                    if (!memchr(processed + 2, code, 6)) {
+                    if (make) {
                         switchDelay();
                         xmit = XMIT_MACRO;
                     }
                     break;
                 case KEY_MOD:
-                    if (!memchr(processed + 2, code, 6)) {
+                    if (make) {
                         switchMod();
                         xmit = XMIT_MACRO;
                     }
                     break;
                 case KEY_LED:
-                    if (!memchr(processed + 2, code, 6)) {
+                    if (make) {
                         switchLED();
                         xmit = XMIT_MACRO;
                     }
                     break;
                 case KEY_IME:
-                    if (!memchr(processed + 2, code, 6)) {
+                    if (make) {
                         switchIME();
                         xmit = XMIT_MACRO;
                     }
                     break;
                 case KEY_ABOUT:
-                    if (!memchr(processed + 2, code, 6)) {
+                    if (make) {
                         about();
                         xmit = XMIT_MACRO;
                     }
@@ -493,7 +490,7 @@ static char processKeys(const unsigned char* current, const unsigned char* proce
                     else if (key == KEY_LANG2)
                         kana_led = 0;
                     else if (key == KEY_CAPS_LOCK) {
-                        if (!memchr(processed + 2, key, 6) && isJP())
+                        if (make && isJP())
                             eisuu_mode ^= 1;
                     }
                     report[count++] = key;
@@ -614,17 +611,35 @@ unsigned char processModKey(unsigned char key)
 char makeReport(unsigned char* report)
 {
     char xmit = XMIT_NONE;
+    char at;
+    char prev;
 
     if (!detectGhost()) {
         while (count < 8)
             current[count++] = VOID_KEY;
 
         memmove(keys[currentKey].keys, current + 2, 6);
-        if (currentDelay < ++currentKey)
+        if (MAX_DELAY < ++currentKey)
             currentKey = 0;
 
         current[0] = modifiers;
-        memmove(current + 2, keys[currentKey].keys, 6);
+
+        // Copy keys that exist in both keys[prev] and keys[at] for debouncing.
+        at = currentKey + MAX_DELAY - currentDelay;
+        if (MAX_DELAY < at)
+                at -= MAX_DELAY + 1;
+        prev = at + MAX_DELAY;
+        if (MAX_DELAY < prev)
+                prev -= MAX_DELAY + 1;
+        count = 2;
+        for (char i = 0; i < 6; ++i) {
+            unsigned char key = keys[at].keys[i];
+            if (memchr(keys[prev].keys, key, 6))
+                current[count++] = key;
+        }
+        while (count < 8)
+            current[count++] = VOID_KEY;
+
         if (led & LED_SCROLL_LOCK)
             current[1] |= MOD_FN;
 
@@ -639,8 +654,8 @@ char makeReport(unsigned char* report)
             } else
                 xmit = processKeys(current, processed, report);
         }
+        processOSMode(report);
     }
-    processOSMode(report);
     count = 2;
     modifiers = 0;
     current[1] = 0;
