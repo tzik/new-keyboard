@@ -3,7 +3,7 @@
  *
  * This file is a modified version of buttons.c provided by
  * Microchip Technology, Inc. for using Esrille New Keyboard.
- * See the Software License Agreement below for the License.
+ * See the file NOTICE for copying permission.
  */
 
 /*******************************************************************************
@@ -52,8 +52,7 @@ SUBSTITUTE GOODS, TECHNOLOGY, SERVICES, OR ANY CLAIMS BY THIRD PARTIES
 // Section: Included Files
 // *****************************************************************************
 // *****************************************************************************
-#include <stdbool.h>
-#include <xc.h>
+#include <system.h>
 #include <buttons.h>
 
 // *****************************************************************************
@@ -61,22 +60,10 @@ SUBSTITUTE GOODS, TECHNOLOGY, SERVICES, OR ANY CLAIMS BY THIRD PARTIES
 // Section: File Scope or Global Constants
 // *****************************************************************************
 // *****************************************************************************
-//      S1       MCLR reset
-#define S2_PORT  PORTBbits.RB4      //AN11
-#define S3_PORT  PORTBbits.RB5      
 
-#define S2_TRIS  TRISBbits.TRISB4
-#define S3_TRIS  TRISBbits.TRISB5
-
-#define BUTTON_PRESSED      0
-#define BUTTON_NOT_PRESSED  1
-
-#define PIN_INPUT           1
-#define PIN_OUTPUT          0
-
-#define PIN_DIGITAL         1
-#define PIN_ANALOG          0
-
+static unsigned char trisA = 0x00;
+static unsigned char trisE = 0x03;
+static unsigned char portD = 0xFC;
 
 // *****************************************************************************
 // *****************************************************************************
@@ -96,11 +83,20 @@ SUBSTITUTE GOODS, TECHNOLOGY, SERVICES, OR ANY CLAIMS BY THIRD PARTIES
 ********************************************************************/
 bool BUTTON_IsPressed()
 {
-    LATA &= 0xC0;
-    LATE &= 0xFC;
-    TRISA = 0x00;
+    bool result;
+
+    if (3 <= BOARD_REV_VALUE) {
+        trisA = 0x01;
+        trisE = 0x07;
+    }
+    if (4 <= BOARD_REV_VALUE)
+        portD = 0xF3;
+    TRISA = trisA;
     TRISE = 0x00;
-    return (~PORTD & 0xFC) || (~PORTB & 0x3F);
+    result = (~PORTD & portD) || (~PORTB & 0x3F);
+    TRISA = 0x3F;
+    TRISE = trisE;
+    return result;
 }
 
 

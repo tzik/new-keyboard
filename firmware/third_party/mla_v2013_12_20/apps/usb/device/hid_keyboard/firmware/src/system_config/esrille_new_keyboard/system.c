@@ -1,9 +1,9 @@
 /*
- * Copyright 2014 Esrille Inc.
+ * Copyright 2014, 2015 Esrille Inc.
  *
  * This file is a modified version of system.c provided by
  * Microchip Technology, Inc. for using Esrille New Keyboard.
- * See the Software License Agreement below for the License.
+ * See the file NOTICE for copying permission.
  */
 
 /*******************************************************************************
@@ -54,16 +54,20 @@ SUBSTITUTE GOODS, TECHNOLOGY, SERVICES, OR ANY CLAIMS BY THIRD PARTIES
 // *****************************************************************************
 // *****************************************************************************
 #include <system.h>
+#include <plib/usart.h>
 #include <usb/usb_device.h>
 
+#include <app_device_mouse.h>
+
 #include <Keyboard.h>
+#include <Mouse.h>
 
 // *****************************************************************************
 // *****************************************************************************
 // Section: File Scope or Global Constants
 // *****************************************************************************
 // *****************************************************************************
-#pragma config PLLDIV   = 4         // (16 MHz resonator on esrille new keyboard)
+#pragma config PLLDIV   = 1         // 4 MHz resonator
 #pragma config CPUDIV   = OSC3_PLL4 // USB Low Speed
 #pragma config USBDIV   = 2         // Clock source from 96MHz PLL/2
 #pragma config FOSC     = HSPLL_HS
@@ -111,71 +115,115 @@ SUBSTITUTE GOODS, TECHNOLOGY, SERVICES, OR ANY CLAIMS BY THIRD PARTIES
 
 const unsigned int VersionWord @ APP_VERSION_ADDRESS = APP_VERSION_VALUE;
 
+static unsigned char trisD = 0xfc;  // 0~1, output; 2~7, input
+static unsigned char trisE = 0x03;  // 0~1, input initially
+
 // *****************************************************************************
 // *****************************************************************************
 // Section: Macros or Functions
 // *****************************************************************************
 // *****************************************************************************
 void SYSTEM_Initialize( SYSTEM_STATE state )
-{   
+{
     switch(state)
     {
         case SYSTEM_STATE_USB_START:
             CCP1CON = 0;
             CCP2CON = 0;
-            ADCON1 |= 0x0F; // Digital I/O
+            ADCON1 = 0x0F; // Digital I/O
+
+            if (3 <= BOARD_REV_VALUE) {
+                ADCON0 = 0x00;
+                ADCON1 = 0x0E;  // Enable AN0
+                ADCON2 = 0x9E;  // 6 Tad, Fosc/64 10 011 110
+                if (BOARD_REV_VALUE == 3)
+                    trisD = 0xfe;   // 0, output; 1~7, input
+                else
+                    trisD = 0xf3;   // 2,3, output; 0, 1, 4~7, input
+                trisE = 0x07;   // 0~2, input initially
+            }
 
             //Initialize all of the LED pins and key matrix ports
             // PORT A (0~5, input initially)
-            LATA &= 0xC0;
+            LATA = 0x00;
             TRISA = 0x3F;
 
             // PORT B (0~7, input)
+            LATB = 0x00;
             TRISB = 0xFF;
-            LATB |= 0xFF;
             INTCON2bits.RBPU = 0;   // Enable pull up
 
-            // TODO: Check INT
-
             // PORT C (0-2, 6-7 output)
-            LATC &= 0x38;
-            LATC |= 0xC7;   // Default HI
+            LATC = 0x00;
             TRISC = 0x38;
-            // TODO: Check timer
 
-            // PORT D (0~1, output; 2~7, input)
-            LATD &= 0xFC;
-            LATD |= 0x03;   // Default HI
-            TRISD = 0xFC;
-            LATD |= 0xFC;
+            // PORT D
+            LATD = 0x00;
+            TRISD = trisD;
             PORTEbits.RDPU = 1;     // Enable pull up
 
-            // PORT E (0~1, input initially)
-            LATE &= 0xFB;
-            LATE |= 0x04;   // Default HI
-            TRISE = 0x03;
+            // PORT E
+            LATE = 0x00;
+            TRISE = trisE;
 
             initKeyboard();
+
+#ifdef ENABLE_MOUSE
+            // Initialize USART (9600bps: 624, 38400bps: 155)
+            baudUSART(BAUD_IDLE_RX_PIN_STATE_HIGH & BAUD_IDLE_TX_PIN_STATE_HIGH & BAUD_16_BIT_RATE & BAUD_WAKEUP_OFF & BAUD_AUTO_OFF);
+            OpenUSART(USART_TX_INT_OFF & USART_RX_INT_ON & USART_ASYNCH_MODE & USART_EIGHT_BIT & USART_CONT_RX & USART_BRGH_HIGH, 155);
+            INTCONbits.PEIE = 1;    // Enable peripheral interrupt
+            INTCONbits.GIE = 1;     // Enable global interrupt
+            initMouse();
+#endif
             break;
-			
-        case SYSTEM_STATE_USB_SUSPEND: 
+
+        case SYSTEM_STATE_USB_SUSPEND:
+            OSCCON = 0x13;	//Sleep on sleep, 125kHz selected as microcontroller clock source
             break;
-            
+
         case SYSTEM_STATE_USB_RESUME:
+            OSCCON = 0x60;      //Primary clock source selected.
+
+            //Adding a software start up delay will ensure
+            //that the primary oscillator and PLL are running before executing any other
+            //code.  If the PLL isn't being used, (ex: primary osc = 48MHz externally applied EC)
+            //then this code adds a small unnecessary delay, but it is harmless to execute anyway.
+            __delay_ms(2);
             break;
     }
 }
-		
+
 #if defined(__XC8)
 void interrupt SYS_InterruptHigh(void)
 {
-    #if defined(USB_INTERRUPT)
-        USBDeviceTasks();
-    #endif
+#if defined(USB_INTERRUPT)
+    USBDeviceTasks();
+#endif
+
+#ifdef ENABLE_MOUSE
+    if (DataRdyUSART()) {
+        if (RCSTAbits.OERR || RCSTAbits.FERR) {
+            ReadUSART();    // Clear FERR
+            RCSTA = 0;      // Clear OERR
+            RCSTA = 0x90;   // Restart USARTs
+        } else {
+            uint8_t data = ReadUSART();    // Clear FERR
+
+            /* We will be getting data before we get the SET_CONFIGURATION
+             * packet that will configure this device, thus, we need to make sure that
+             * we are actually initialized and open before we do anything else,
+             * otherwise we should exit the function without doing anything.
+             */
+            if (USBGetDeviceState() == CONFIGURED_STATE && processSerialUnit(data)) {
+                APP_DeviceMouseTasks();
+            }
+        }
+    }
+#endif
 }
 #endif
 
 /*******************************************************************************
  End of File
 */
-

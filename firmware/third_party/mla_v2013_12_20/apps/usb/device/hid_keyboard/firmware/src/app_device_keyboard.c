@@ -1,9 +1,9 @@
 /*
- * Copyright 2014 Esrille Inc.
+ * Copyright 2014-2016 Esrille Inc.
  *
  * This file is a modified version of app_device_keyboard.c provided by
  * Microchip Technology, Inc. for using Esrille New Keyboard.
- * See the Software License Agreement below for the License.
+ * See the file NOTICE for copying permission.
  */
 
 /*******************************************************************************
@@ -53,8 +53,9 @@ SUBSTITUTE GOODS, TECHNOLOGY, SERVICES, OR ANY CLAIMS BY THIRD PARTIES
 // Section: Included Files
 // *****************************************************************************
 // *****************************************************************************
-#include <stdint.h>
 #include <system.h>
+#include <stdint.h>
+#include <stdio.h>
 #include <usb/usb.h>
 #include <usb/usb_device_hid.h>
 #include <plib/timers.h>
@@ -63,6 +64,8 @@ SUBSTITUTE GOODS, TECHNOLOGY, SERVICES, OR ANY CLAIMS BY THIRD PARTIES
 #include "app_led_usb_status.h"
 
 #include <Keyboard.h>
+
+#define SCAN_DELAY  (_XTAL_FREQ / 256 / 4 / 167 + 1) // About 6 [msec]
 
 // *****************************************************************************
 // *****************************************************************************
@@ -273,7 +276,208 @@ static KEYBOARD_INPUT_REPORT inputReport KEYBOARD_INPUT_REPORT_DATA_BUFFER_ADDRE
 #endif
 static volatile KEYBOARD_OUTPUT_REPORT outputReport KEYBOARD_OUTPUT_REPORT_DATA_BUFFER_ADDRESS_TAG;
 
+static volatile unsigned char* rowPorts[8] = {
+    &TRISA,
+    &TRISA,
+    &TRISA,
+    &TRISA,
+    &TRISA,
+    &TRISA,
+    &TRISE,
+    &TRISE
+};
+
+static volatile unsigned char* rowPorts4[8] = {
+    &TRISE,
+    &TRISE,
+    &TRISE,
+    &TRISA,
+    &TRISA,
+    &TRISA,
+    &TRISA,
+    &TRISA,
+};
+
+#if APP_MACHINE_VALUE != 0x4550
+// Rev 6
+static volatile unsigned char* rowPorts6[8] = {
+    &TRISA,
+    &TRISA,
+    &TRISA,
+    &TRISA,
+    &TRISA,
+    &TRISE,
+    &TRISE,
+    &TRISE,
+};
+#endif
+
+static unsigned char rowBits[8] = {
+    1u << 0,
+    1u << 1,
+    1u << 2,
+    1u << 3,
+    1u << 4,
+    1u << 5,
+    1u << 0,
+    1u << 1
+};
+
+// Rev 3
+static unsigned char rowBits3[8] = {
+    1u << 1,
+    1u << 2,
+    1u << 3,
+    1u << 4,
+    1u << 5,
+    1u << 0,
+    1u << 1,
+    1u << 2
+};
+
+// Rev 4
+static unsigned char rowBits4[8] = {
+    1u << 2,
+    1u << 1,
+    1u << 0,
+    1u << 5,
+    1u << 4,
+    1u << 3,
+    1u << 2,
+    1u << 1
+};
+
+#if APP_MACHINE_VALUE != 0x4550
+// Rev 6
+static unsigned char rowBits6[8] = {
+    1u << 0,
+    1u << 1,
+    1u << 2,
+    1u << 3,
+    1u << 5,
+    1u << 0,
+    1u << 1,
+    1u << 2
+};
+#endif
+
+static volatile unsigned char* columnPorts[12] = {
+    &PORTD,
+    &PORTD,
+    &PORTD,
+    &PORTD,
+    &PORTD,
+    &PORTD,
+    &PORTB,
+    &PORTB,
+    &PORTB,
+    &PORTB,
+    &PORTB,
+    &PORTB,
+};
+
+// Rev 4
+static volatile unsigned char* columnPorts4[12] = {
+    &PORTB,
+    &PORTB,
+    &PORTB,
+    &PORTB,
+    &PORTB,
+    &PORTB,
+    &PORTD,
+    &PORTD,
+    &PORTD,
+    &PORTD,
+    &PORTD,
+    &PORTD,
+};
+
+#if APP_MACHINE_VALUE != 0x4550
+// Rev 6
+static volatile unsigned char* columnPorts6[12] = {
+    &PORTD,
+    &PORTD,
+    &PORTB,
+    &PORTB,
+    &PORTB,
+    &PORTB,
+    &PORTD,
+    &PORTD,
+    &PORTD,
+    &PORTB,
+    &PORTB,
+    &PORTB,
+};
+#endif
+
+static unsigned char columnBits[12] = {
+    1u << 4,
+    1u << 5,
+    1u << 6,
+    1u << 7,
+    1u << 2,
+    1u << 3,
+    1u << 5,
+    1u << 4,
+    1u << 1,
+    1u << 0,
+    1u << 2,
+    1u << 3,
+};
+
+// Rev 3
+static unsigned char columnBits3[12] = {
+    1u << 7,
+    1u << 6,
+    1u << 5,
+    1u << 4,
+    1u << 3,
+    1u << 2,
+    1u << 5,
+    1u << 4,
+    1u << 3,
+    1u << 2,
+    1u << 0,
+    1u << 1,
+};
+
+// Rev 4
+static unsigned char columnBits4[12] = {
+    1u << 0,
+    1u << 1,
+    1u << 2,
+    1u << 3,
+    1u << 4,
+    1u << 5,
+    1u << 7,
+    1u << 6,
+    1u << 5,
+    1u << 4,
+    1u << 1,
+    1u << 0,
+};
+
+#if APP_MACHINE_VALUE != 0x4550
+// Rev 6
+static unsigned char columnBits6[12] = {
+    1u << 6,
+    1u << 7,
+    1u << 0,
+    1u << 1,
+    1u << 2,
+    1u << 3,
+    1u << 1,
+    1u << 2,
+    1u << 3,
+    1u << 7,
+    1u << 6,
+    1u << 5,
+};
+#endif
+
 static int tick;
+static int8_t xmit = XMIT_NORMAL;
+
 
 // *****************************************************************************
 // *****************************************************************************
@@ -287,6 +491,47 @@ static int tick;
 // Section: Macros or Functions
 // *****************************************************************************
 // *****************************************************************************
+
+void APP_KeyboardConfigure(void)
+{
+#if APP_MACHINE_VALUE != 0x4550
+    if (6 <= BOARD_REV_VALUE) {
+        for (char i = 0; i < 8; ++i) {
+            rowPorts[i] = rowPorts6[i];
+            rowBits[i] = rowBits6[i];
+        }
+        for (char i = 0; i < 12; ++i) {
+            columnPorts[i] = columnPorts6[i];
+            columnBits[i] = columnBits6[i];
+        }
+    }
+    else
+#endif
+    if (4 <= BOARD_REV_VALUE)
+    {
+        for (char i = 0; i < 8; ++i) {
+            rowPorts[i] = rowPorts4[i];
+            rowBits[i] = rowBits4[i];
+        }
+        for (char i = 0; i < 12; ++i) {
+            columnPorts[i] = columnPorts4[i];
+            columnBits[i] = columnBits4[i];
+        }
+        if (5 <= BOARD_REV_VALUE) {
+            columnBits[10] = 1u << 0;
+            columnBits[11] = 1u << 1;
+        }
+    }
+    else if (BOARD_REV_VALUE == 3)
+    {
+        rowPorts[5] = &TRISE;
+        for (char i = 0; i < 8; ++i)
+            rowBits[i] = rowBits3[i];
+        for (char i = 0; i < 12; ++i)
+            columnBits[i] = columnBits3[i];
+    }
+}
+
 void APP_KeyboardInit(void)
 {
     //initialize the variable holding the handle for the last
@@ -307,136 +552,88 @@ void APP_KeyboardInit(void)
     tick = (int) ReadTimer0();
 }
 
-void APP_KeyboardTasks(void)
+uint8_t* APP_KeyboardScan(void)
 {
-    static int8_t xmit = XMIT_NORMAL;
     int8_t row;
     uint8_t column;
-    uint8_t on;
 
-    if (xmit != XMIT_BRK && xmit != XMIT_IN_ORDER) {
-        static int8_t cnt;
-        
-        while (((int) ReadTimer0()) - tick < 141)   // 281: 12msec at 24MHz
-            ;
-        tick = (int) ReadTimer0();
-        APP_LEDUpdateUSBStatus();
-        if (++cnt & 1)
-            return;
+    if (xmit == XMIT_IN_ORDER) {
+        uint8_t key = peekMacro();
+        uint8_t mod = 0;
+#if APP_MACHINE_VALUE != 0x4550
+        if (key == KEYPAD_PERCENT) {
+            key = KEY_5;
+            mod = MOD_LEFTSHIFT;
+        }
+#endif
+        if (inputReport.keys[0] && inputReport.keys[0] == key)
+            inputReport.keys[0] = 0;    // BRK
+        else {
+            getMacro();
+            inputReport.keys[0] = key;
+            inputReport.modifiers.value = mod;
+            if (!inputReport.keys[0])
+                xmit = XMIT_NONE;
+        }
+    } else {
+        if (BUTTON_IsPressed()) {
+            BUTTON_Enable();
+            for (row = 7; 0 <= row; --row) {
+                *rowPorts[row] &= ~rowBits[row];
+                for (column = 0; column < 12; ++column) {
+                    if (!(*columnPorts[column] & columnBits[column]))
+                        onPressed(row, column);
+                }
+                *rowPorts[row] |= rowBits[row];
+            }
+            BUTTON_Disable();
+        }
+
+        xmit = makeReport((uint8_t*) &inputReport);
+        switch (xmit) {
+        case XMIT_BRK:
+            memset(&inputReport + 2, 0, 6);
+            break;
+        case XMIT_NORMAL:
+            break;
+        case XMIT_IN_ORDER:
+            for (uint8_t i = 0; i < 6; ++i)
+                emitKey(inputReport.keys[i]);
+            inputReport.keys[0] = beginMacro(6);
+            memset(inputReport.keys + 1, 0, 5);
+            break;
+        case XMIT_MACRO:
+            xmit = XMIT_IN_ORDER;
+            inputReport.modifiers.value = 0;
+            inputReport.keys[0] = beginMacro(MAX_MACRO_SIZE);
+            memset(inputReport.keys + 1, 0, 5);
+            break;
+        default:
+            break;
+        }
     }
+    if (!xmit)
+        return NULL;
+    return (uint8_t*) &inputReport;
+}
+
+void APP_KeyboardTasks(void)
+{
+    static int8_t cnt;
+
+    while (((int) ReadTimer0()) - tick < (int) SCAN_DELAY)
+        ;
+    tick = (int) ReadTimer0();
+    if (++cnt & 1)
+        return;
 
     /* Check if the IN endpoint is busy, and if it isn't check if we want to send
      * keystroke data to the host. */
     if (!HIDTxHandleBusy(keyboard.lastINTransmission)) {
-        if (xmit == XMIT_IN_ORDER) {
-            if (inputReport.keys[0] && inputReport.keys[0] == peekMacro())
-                inputReport.keys[0] = 0;    // BRK
-            else {
-                inputReport.keys[0] = getMacro();
-                if (!inputReport.keys[0])
-                    xmit = XMIT_NONE;
-            }
-        } else {
-            for (row = 7; 0 <= row; --row) {
-                PORTA &= 0xC0;
-                PORTE &= 0xFC;
-                TRISA |= 0x3F;
-                TRISE |= 0x03;
-                switch (row) {
-                case 0:
-                    TRISAbits.TRISA0 = 0;
-                    break;
-                case 1:
-                    TRISAbits.TRISA1 = 0;
-                    break;
-                case 2:
-                    TRISAbits.TRISA2 = 0;
-                    break;
-                case 3:
-                    TRISAbits.TRISA3 = 0;
-                    break;
-                case 4:
-                    TRISAbits.TRISA4 = 0;
-                    break;
-                case 5:
-                    TRISAbits.TRISA5 = 0;
-                    break;
-                case 6:
-                    TRISEbits.TRISE0 = 0;
-                    break;
-                case 7:
-                    TRISEbits.TRISE1 = 0;
-                    break;
-                }
-                for (column = 0; column < 12; ++column) {
-                    switch (column) {
-                    case 0:
-                        on = !PORTDbits.RD4;
-                        break;
-                    case 1:
-                        on = !PORTDbits.RD5;
-                        break;
-                    case 2:
-                        on = !PORTDbits.RD6;
-                        break;
-                    case 3:
-                        on = !PORTDbits.RD7;
-                        break;
-                    case 4:
-                        on = !PORTDbits.RD2;
-                        break;
-                    case 5:
-                        on = !PORTDbits.RD3;
-                        break;
-                    case 6:
-                        on = !PORTBbits.RB5;
-                        break;
-                    case 7:
-                        on = !PORTBbits.RB4;
-                        break;
-                    case 8:
-                        on = !PORTBbits.RB1;
-                        break;
-                    case 9:
-                        on = !PORTBbits.RB0;
-                        break;
-                    case 10:
-                        on = !PORTBbits.RB2;
-                        break;
-                    case 11:
-                        on = !PORTBbits.RB3;
-                        break;
-                    }
-                    if (on)
-                        onPressed(row, column);
-                }
-            }
-
-            xmit = makeReport((uint8_t*) &inputReport);
-            switch (xmit) {
-            case XMIT_BRK:
-                memset(&inputReport + 2, 0, 6);
-                break;
-            case XMIT_NORMAL:
-                break;
-            case XMIT_IN_ORDER:
-                for (char i = 0; i < 6; ++i)
-                    emitKey(inputReport.keys[i]);
-                inputReport.keys[0] = beginMacro(6);
-                memset(inputReport.keys + 1, 0, 5);
-                break;
-            case XMIT_MACRO:
-                xmit = XMIT_IN_ORDER;
-                inputReport.modifiers.value = 0;
-                inputReport.keys[0] = beginMacro(128);
-                memset(inputReport.keys + 1, 0, 5);
-                break;
-            default:
-                break;
-            }
+        uint8_t* report = APP_KeyboardScan();
+        if (report) {
+            keyboard.lastINTransmission = HIDTxPacket(HID_EP, report, sizeof(inputReport));
         }
-        if (xmit)
-            keyboard.lastINTransmission = HIDTxPacket(HID_EP, (uint8_t*) &inputReport, sizeof(inputReport));
     }
 
     /* Check if any data was sent from the PC to the keyboard device.  Report
@@ -451,50 +648,17 @@ void APP_KeyboardTasks(void)
 
 void APP_KeyboardProcessOutputReport(void)
 {
-    uint8_t led = controlLED(outputReport.value);
-    if (led & LED_NUM_LOCK)
-        LED_On(LED_USB_DEVICE_HID_KEYBOARD_NUM_LOCK);
-    else
-        LED_Off(LED_USB_DEVICE_HID_KEYBOARD_NUM_LOCK);
-
-    if (led & LED_CAPS_LOCK)
-        LED_On(LED_USB_DEVICE_HID_KEYBOARD_CAPS_LOCK);
-    else
-        LED_Off(LED_USB_DEVICE_HID_KEYBOARD_CAPS_LOCK);
-
-    if (led & LED_SCROLL_LOCK)
-        LED_On(LED_USB_DEVICE_HID_KEYBOARD_SCROLL_LOCK);
-    else
-        LED_Off(LED_USB_DEVICE_HID_KEYBOARD_SCROLL_LOCK);
+    APP_LEDUpdate(controlLED(outputReport.value));
 }
 
 void APP_Suspend()
 {
-    APP_LEDUpdateUSBStatus();
-
-    PORTA &= 0xC0;
-    PORTE &= 0xFC;
-    TRISA = 0x3F;
-    TRISE = 0x03;
-
-    OSCCON = 0x13;	//Sleep on sleep, 125kHz selected as microcontroller clock source
+    SYSTEM_Initialize(SYSTEM_STATE_USB_SUSPEND);
 }
 
 void APP_WakeFromSuspend()
 {
-    OSCCON = 0x60;      //Primary clock source selected.
-
-    //Adding a software start up delay will ensure
-    //that the primary oscillator and PLL are running before executing any other
-    //code.  If the PLL isn't being used, (ex: primary osc = 48MHz externally applied EC)
-    //then this code adds a small unnecessary delay, but it is harmless to execute anyway.
-    {
-        unsigned int pll_startup_counter = 800;	//Long delay at 31kHz, but ~0.8ms at 48MHz
-        while (pll_startup_counter--)
-            ;                                   //Clock will switch over while executing this delay loop
-    }
-
-    APP_LEDUpdateUSBStatus();
+    SYSTEM_Initialize(SYSTEM_STATE_USB_RESUME);
 }
 
 static void USBHIDCBSetReportComplete(void)
@@ -502,9 +666,6 @@ static void USBHIDCBSetReportComplete(void)
     /* 1 byte of LED state data should now be in the CtrlTrfData buffer.  Copy
      * it to the OUTPUT report buffer for processing */
     outputReport.value = CtrlTrfData[0];
-
-    /* Process the OUTPUT report. */
-    APP_LEDUpdateUSBStatus();
 }
 
 void USBHIDCBSetReportHandler(void)

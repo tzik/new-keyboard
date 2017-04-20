@@ -1,9 +1,9 @@
 /*
- * Copyright 2014 Esrille Inc.
+ * Copyright 2014-2016 Esrille Inc.
  *
  * This file is a modified version of app_led_usb_status.c provided by
  * Microchip Technology, Inc. for using Esrille New Keyboard.
- * See the Software License Agreement below for the License.
+ * See the file NOTICE for copying permission.
  */
 
 /*******************************************************************************
@@ -61,6 +61,8 @@ SUBSTITUTE GOODS, TECHNOLOGY, SERVICES, OR ANY CLAIMS BY THIRD PARTIES
 
 #include "app_device_keyboard.h"
 
+#include <Keyboard.h>
+
 // *****************************************************************************
 // *****************************************************************************
 // Section: File Scope or Global Constants
@@ -81,27 +83,42 @@ SUBSTITUTE GOODS, TECHNOLOGY, SERVICES, OR ANY CLAIMS BY THIRD PARTIES
 // *****************************************************************************
 // *****************************************************************************
 
+void APP_LEDUpdate(uint8_t led)
+{
+    if (led & LED_NUM_LOCK)
+        LED_On(LED_USB_DEVICE_HID_KEYBOARD_NUM_LOCK);
+    else
+        LED_Off(LED_USB_DEVICE_HID_KEYBOARD_NUM_LOCK);
+
+    if (led & LED_CAPS_LOCK)
+        LED_On(LED_USB_DEVICE_HID_KEYBOARD_CAPS_LOCK);
+    else
+        LED_Off(LED_USB_DEVICE_HID_KEYBOARD_CAPS_LOCK);
+
+    if (led & LED_SCROLL_LOCK)
+        LED_On(LED_USB_DEVICE_HID_KEYBOARD_SCROLL_LOCK);
+    else
+        LED_Off(LED_USB_DEVICE_HID_KEYBOARD_SCROLL_LOCK);
+}
+
 void APP_LEDUpdateUSBStatus(void)
 {
-    if(USBIsDeviceSuspended())
-    {
+    if (USBIsDeviceSuspended()) {
         LED_Off(LED_USB_DEVICE_HID_KEYBOARD_NUM_LOCK);
         LED_Off(LED_USB_DEVICE_HID_KEYBOARD_CAPS_LOCK);
         LED_Off(LED_USB_DEVICE_HID_KEYBOARD_SCROLL_LOCK);
         return;
     }
 
-    switch(USBGetDeviceState())
-    {         
-        case CONFIGURED_STATE:
-            APP_KeyboardProcessOutputReport();
-            break;
-
-        default:
-            LED_On(LED_USB_DEVICE_HID_KEYBOARD_NUM_LOCK);
-            LED_On(LED_USB_DEVICE_HID_KEYBOARD_CAPS_LOCK);
-            LED_On(LED_USB_DEVICE_HID_KEYBOARD_SCROLL_LOCK);
-            break;
+    switch (USBGetDeviceState()) {
+    case CONFIGURED_STATE:
+        APP_KeyboardProcessOutputReport();
+        break;
+    default:
+        LED_On(LED_USB_DEVICE_HID_KEYBOARD_NUM_LOCK);
+        LED_On(LED_USB_DEVICE_HID_KEYBOARD_CAPS_LOCK);
+        LED_On(LED_USB_DEVICE_HID_KEYBOARD_SCROLL_LOCK);
+        break;
     }
 }
 

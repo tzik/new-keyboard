@@ -1,9 +1,9 @@
 /*
- * Copyright 2014 Esrille Inc.
+ * Copyright 2014-2016 Esrille Inc.
  *
  * This file is a modified version of main.c provided by
  * Microchip Technology, Inc. for using Esrille New Keyboard.
- * See the Software License Agreement below for the License.
+ * See the file NOTICE for copying permission.
  */
 
 /*******************************************************************************
@@ -57,6 +57,7 @@ SUBSTITUTE GOODS, TECHNOLOGY, SERVICES, OR ANY CLAIMS BY THIRD PARTIES
 // *****************************************************************************
 /* Standard C includes */
 #include <stdint.h>
+#include <stdio.h>
 
 /* Microchip library includes */
 #include <system.h>
@@ -65,9 +66,15 @@ SUBSTITUTE GOODS, TECHNOLOGY, SERVICES, OR ANY CLAIMS BY THIRD PARTIES
 #include <usb/usb.h>
 #include <usb/usb_device_hid.h>
 
-/* Demo project includes */
 #include "app_led_usb_status.h"
 #include "app_device_keyboard.h"
+#include "app_device_mouse.h"
+
+#include <Keyboard.h>
+
+#ifdef ENABLE_MOUSE
+#include <Mouse.h>
+#endif
 
 
 // *****************************************************************************
@@ -93,15 +100,39 @@ static void USBCBSendResume(void);
 int main(void)
 {
     SYSTEM_Initialize(SYSTEM_STATE_USB_START);
+    LED_Initialize();
+    APP_KeyboardConfigure();
+
+#ifdef WITH_HOS
+    HosCheckDFU(BOOT_FLAGS_VALUE & BOOT_WITH_APP);
+    if (!isUSBMode() || !isBusPowered()) {
+        HosMainLoop();
+    }
+    for (uint16_t i = 0; i < HOS_STARTUP_DELAY; ++i) {
+        if (HosSleep(HOS_TYPE_DEFAULT)) {
+            break;
+        }
+        __delay_ms(4);
+    }
+#endif
 
     USBDeviceInit();
     USBDeviceAttach();
 
     for (;;)
     {
+#ifdef WITH_HOS
+        if (!isBusPowered() || !isUSBMode()) {
+            Reset();
+            Nop();
+            Nop();
+            // NOT REACHED HERE
+        }
+#endif
+
         SYSTEM_Tasks();
 
-        #if defined(USB_POLLING)
+#if defined(USB_POLLING)
         /* Check bus status and service USB interrupts.  Interrupt or polling
          * method.  If using polling, must call this function periodically.
          * This function will take care of processing and responding to SETUP
@@ -114,7 +145,9 @@ int main(void)
          * USBDeviceTasks() function does not take very long to execute
          * (ex: <100 instruction cycles) before it returns. */
         USBDeviceTasks();
-        #endif
+#endif
+
+        APP_LEDUpdateUSBStatus();
 
         /* If the USB device isn't configured yet, we can't really do anything
          * else since we don't have a host to talk to.  So jump back to the
@@ -142,13 +175,13 @@ int main(void)
             continue;
         }
 
-        if (USBSuspendControl == 1)
+        if (USBIsBusSuspended())
         {
             /* Jump back to the top of the while loop. */
             continue;
         }
 
-        /* Run the keyboard demo tasks. */
+        /* Run the keyboard tasks. */
         APP_KeyboardTasks();
     }//end while
 }//end main
@@ -242,8 +275,6 @@ int main(void)
  *******************************************************************/
 static void USBCBSendResume(void)
 {
-    static uint16_t delay_count;
-
     //First verify that the host has armed us to perform remote wakeup.
     //It does this by sending a SET_FEATURE request to enable remote wakeup,
     //usually just before the host goes to standby mode (note: it will only
@@ -263,8 +294,7 @@ static void USBCBSendResume(void)
 
             //Clock switch to settings consistent with normal USB operation.
             APP_WakeFromSuspend();
-            USBSuspendControl = 0;
-            USBBusIsSuspended = false;  //So we don't execute this code again,
+            USBSuspendControl = 0;      //So we don't execute this code again,
                                         //until a new suspend condition is detected.
 
             //Section 7.1.7.7 of the USB 2.0 specifications indicates a USB
@@ -273,20 +303,12 @@ static void USBCBSendResume(void)
             //gets met, is to add a 2ms+ blocking delay here (2ms plus at
             //least 3ms from bus idle to USBIsBusSuspended() == TRUE, yeilds
             //5ms+ total delay since start of idle).
-            delay_count = 3600U;
-            do
-            {
-                delay_count--;
-            }while(delay_count);
+            __delay_ms(3);
 
             //Now drive the resume K-state signalling onto the USB bus.
             USBResumeControl = 1;       // Start RESUME signaling
-            delay_count = 1800U;        // Set RESUME line for 1-13 ms
-            do
-            {
-                delay_count--;
-            }while(delay_count);
-            USBResumeControl = 0;       //Finished driving resume signalling
+            __delay_ms(2);              // Set RESUME line for 1-13 ms
+            USBResumeControl = 0;       // Finished driving resume signalling
 
             USBUnmaskInterrupts();
         }
@@ -315,6 +337,9 @@ bool USER_USB_CALLBACK_EVENT_HANDLER(USB_EVENT event, void *pdata, uint16_t size
             /* When the device is configured, we can (re)initialize the keyboard
              * demo code. */
             APP_KeyboardInit();
+#ifdef ENABLE_MOUSE
+            APP_DeviceMouseInitialize();
+#endif
             break;
 
         case EVENT_SET_DESCRIPTOR:

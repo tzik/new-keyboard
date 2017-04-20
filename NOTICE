@@ -1,30 +1,61 @@
-The Esrille New Keyboard
-Copyright 2013, 2014 Esrille Inc.
+The Esrille New Keyboard - NISSE
+Copyright 2013-2015 Esrille Inc.
 
 This product includes the design (the "Design") and the firmware (the
-"Firmware") of the Esrille New Keyboard being developed at Esrille Inc.
+"Firmware") of the Esrille New Keyboard - NISSE being developed at Esrille Inc.
 (http://www.esrille.com/keyboard/).
+
+Unless otherwise explicitly stated in the individual source files,
+Esrille Inc. is supplying the Firmware for use solely and exclusively on
+the Esrille New Keyboard - NISSE. Hardware vendors and other distributors that
+combine and distribute commercially the hardware products with the Firmware
+must enter into a commercial license agreement with Esrille Inc.
 
 The Design is licensed under a Creative Commons Attribution-ShareAlike 4.0
 International License. You may obtain a copy of the License at:
     http://creativecommons.org/licenses/by-sa/4.0/
 
-The Firmware is licensed under the Apache License, Version 2.0 (the "License");
-you may not use the Firmware except in compliance with the License. You may
-obtain a copy of the License at:
+The Design covered by the above mentioned license is limited to the position
+of the key switches. The other design elements including but not limited to the
+design of the keyboard enclosure and the design of the font-faces used for the
+keycap legends, are provided under licenses other than the above mentioned
+license and may be under the copyright of organizations other than Esrille
+Inc.
+
+Some portions of the Firmware is licensed under the Apache License, Version 2.0
+(the "License"); you may not use those portions except in compliance with the
+License. You may obtain a copy of the License at:
     http://www.apache.org/licenses/LICENSE-2.0
+
+Some portions of the Firmware are provided under licenses other than the above
+mentioned licenses and may be under the copyright of organizations other than
+Esrille Inc.
 
 The USB Product ID ("PID") 0xf550 used in the Firmware is sublicensed from
 Microchip Technology Inc., for the initial 10,000 units of the Esrille New
-Keyboard that are shipped from Esrille Inc. If the Firmware is to be used in
-the other products, you will be responsible for obtaining another PID and/or
-a USB Vendor ID.
+Keyboard - NISSE that are shipped from Esrille Inc. If the Firmware is to be
+used in the other products, you will be responsible for obtaining another PID
+and/or a USB Vendor ID.
 
-Some portions of the Design and the Firmware are provided under licenses other
-than the above mentioned licenses and may be under the copyright of
-organizations other than Esrille Inc.
+For more information, please contact at info@esrille.com.
+
+
+== ⚠ ATTENTION ==
+
+Several source files of the Firmware contain comment lines including the
+⚠ ATTENTION mark. Those files must not be modified to maintain Bluetooth®
+Qualification of the Esrille New Keyboard - NISSE.
+
+See "Bluetooth Qualification and Declaration Processes" for more details:
+  https://www.bluetooth.org/en-us/test-qualification/qualification-overview
+
 
 == Credits ==
+
+The Bluetooth® word mark and logos are registered trademarks owned by the
+Bluetooth SIG, Inc. and any use of such marks by Esrille Inc. is under
+license.
+
 
 The Firmware contains code provided by Microchip Technology Incorporated for
 its PIC Microcontroller, for use solely and exclusively on Microchip PIC
@@ -48,6 +79,7 @@ published as:
     Masasuke Morita, "On the Optimization of Japanese Text Input System and
     Keyboard System", IEICE Trans. D, Vol.J70-D, No.11, 1987.
     (http://search.ieice.org/bin/summary.php?id=j70-d_11_2047&category=D&lang=J&year=1987&abst=)
+
 
 == The Esrille logo ==
 

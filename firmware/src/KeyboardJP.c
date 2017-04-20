@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2014 Esrille Inc.
+ * Copyright 2013-2016 Esrille Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,22 +17,26 @@
 #include "Keyboard.h"
 
 #include <string.h>
-#include <xc.h>
+#include <system.h>
 
 #define MAX_KANA_KEY_NAME    6
 
-static unsigned char const kanaKeys[KANA_MAX + 1][MAX_KANA_KEY_NAME] =
+#define ENABLE_MTYPE
+#define ENABLE_STICKNEY
+
+static uint8_t const kanaKeys[KANA_MAX + 1][MAX_KANA_KEY_NAME] =
 {
     {KEY_R, KEY_O, KEY_M, KEY_A, KEY_ENTER},
     {KEY_N, KEY_I, KEY_C, KEY_O, KEY_ENTER},
     {KEY_M, KEY_T, KEY_Y, KEY_P, KEY_E, KEY_ENTER},
     {KEY_T, KEY_R, KEY_O, KEY_N, KEY_ENTER},
     {KEY_S, KEY_T, KEY_I, KEY_C, KEY_K, KEY_ENTER},
+    {KEY_X, KEY_6, KEY_0, KEY_0, KEY_4, KEY_ENTER},
 };
 
 #define MAX_LED_KEY_NAME    4
 
-static unsigned char const ledKeyNames[LED_MAX + 1][MAX_LED_KEY_NAME] =
+static uint8_t const ledKeyNames[LED_MAX + 1][MAX_LED_KEY_NAME] =
 {
     {KEY_L, KEY_ENTER},
     {KEY_C, KEY_ENTER},
@@ -45,7 +49,7 @@ static unsigned char const ledKeyNames[LED_MAX + 1][MAX_LED_KEY_NAME] =
 
 #define MAX_IME_KEY_NAME     5
 
-static unsigned char const imeKeyNames[IME_MAX + 1][MAX_IME_KEY_NAME] =
+static uint8_t const imeKeyNames[IME_MAX + 1][MAX_IME_KEY_NAME] =
 {
     {KEY_M, KEY_S, KEY_ENTER},
     {KEY_A, KEY_T, KEY_O, KEY_K, KEY_ENTER},
@@ -53,7 +57,7 @@ static unsigned char const imeKeyNames[IME_MAX + 1][MAX_IME_KEY_NAME] =
     {KEY_A, KEY_P, KEY_P, KEY_L, KEY_ENTER},
 };
 
-static unsigned char const consonantSet[][2] =
+static uint8_t const consonantSet[][2] =
 {
     {0},
     {KEY_K},
@@ -80,7 +84,7 @@ static unsigned char const consonantSet[][2] =
     {KEY_L},
 };
 
-static unsigned char const vowelSet[] =
+static uint8_t const vowelSet[] =
 {
     0,
     KEY_A,
@@ -91,7 +95,8 @@ static unsigned char const vowelSet[] =
     KEY_Y
 };
 
-static unsigned char const mtypeSet[][3] =
+#ifdef ENABLE_MTYPE
+static uint8_t const mtypeSet[][3] =
 {
     {KEY_A, KEY_N, KEY_N},
     {KEY_A, KEY_K, KEY_U},
@@ -116,9 +121,10 @@ static unsigned char const mtypeSet[][3] =
     {KEY_J},
     {KEY_Q},
 };
+#endif
 
-// ROMA_NN - KANA_CHOUON
-static unsigned char const commonSet[][2] =
+// ROMA_NN - ROMA_BANG
+static uint8_t const commonSet[][2] =
 {
     {KEY_N, KEY_N},
     {KEY_MINUS},
@@ -147,12 +153,15 @@ static unsigned char const commonSet[][2] =
     {KEY_LEFTSHIFT, KEY_PERIOD},
     {KEY_LEFTSHIFT, KEY_SLASH},
     {KEY_INTERNATIONAL3},
+
+    // Extra
+    {KEY_LEFTSHIFT, KEY_1},
 };
 
 //
 // ROMA_LCB - ROMA_NAMI
 //
-static unsigned char const msSet[][3] =
+static uint8_t const msSet[][3] =
 {
     {KEY_LEFT_BRACKET},
     {KEY_RIGHT_BRACKET},
@@ -168,7 +177,7 @@ static unsigned char const msSet[][3] =
     {KEY_LEFTSHIFT, KEY_GRAVE_ACCENT},
 };
 
-static unsigned char const googleSet[][3] =
+static uint8_t const googleSet[][3] =
 {
     {KEY_LEFT_BRACKET},
     {KEY_RIGHT_BRACKET},
@@ -184,7 +193,7 @@ static unsigned char const googleSet[][3] =
     {KEY_LEFTSHIFT, KEY_GRAVE_ACCENT},
 };
 
-static unsigned char const atokSet[][3] =
+static uint8_t const atokSet[][3] =
 {
     {KEY_LEFT_BRACKET},
     {KEY_RIGHT_BRACKET},
@@ -200,7 +209,7 @@ static unsigned char const atokSet[][3] =
     {KEY_LEFTSHIFT, KEY_GRAVE_ACCENT},
 };
 
-static unsigned char const appleSet[][3] =
+static uint8_t const appleSet[][3] =
 {
     {KEY_LEFT_BRACKET},
     {KEY_RIGHT_BRACKET},
@@ -216,10 +225,11 @@ static unsigned char const appleSet[][3] =
     {KEY_LEFTSHIFT, KEY_GRAVE_ACCENT},
 };
 
+#ifdef ENABLE_STICKNEY
 //
 // Stickney Next
 //
-static unsigned char const matrixStickney[7][12] =
+static uint8_t const matrixStickney[7][12] =
 {
     {KANA_LCB, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
     {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
@@ -230,7 +240,7 @@ static unsigned char const matrixStickney[7][12] =
     {0, 0, KANA_WO, 0, 0, 0, 0, 0, 0, 0, 0, KANA_CHOUON},
 };
 
-static unsigned char const matrixStickneyShift[7][12] =
+static uint8_t const matrixStickneyShift[7][12] =
 {
     {KANA_LCB, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
     {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
@@ -240,33 +250,34 @@ static unsigned char const matrixStickneyShift[7][12] =
     {0, 0, KANA_SE, KANA_HE, KANA_KE, 0, 0, 0, KANA_ME, KANA_NU, KANA_RO, 0},
     {0, 0, 0, 0, 0, 0, 0, 0, KANA_MU, 0, 0, 0},
 };
+#endif
 
 //
 // TRON
 //
-static unsigned char const matrixTron[7][12] =
+static uint8_t const matrixTron[7][12] =
 {
+    {ROMA_LCB, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
     {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
-    {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
-    {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+    {ROMA_RCB, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
     {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
     {ROMA_RA, ROMA_RU, ROMA_KO, ROMA_HA, ROMA_XYO, 0, 0, ROMA_KI, ROMA_NO, ROMA_KU, ROMA_A, ROMA_RE},
     {ROMA_TA, ROMA_TO, ROMA_KA, ROMA_TE, ROMA_MO, 0, 0, ROMA_WO, ROMA_I, ROMA_U, ROMA_SI, ROMA_NN},
     {ROMA_MA, ROMA_RI, ROMA_NI, ROMA_SA, ROMA_NA, 0, 0, ROMA_SU, ROMA_TU, ROMA_TOUTEN, ROMA_KUTEN, ROMA_XTU},
 };
 
-static unsigned char const matrixTronLeft[7][12] =
+static uint8_t const matrixTronLeft[7][12] =
 {
-    {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+    {ROMA_LCB, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
     {ROMA_SANTEN, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
-    {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+    {ROMA_RCB, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
     {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
     {ROMA_HI, ROMA_SO, ROMA_NAKAGURO, ROMA_XYA, ROMA_HO, 0, 0, ROMA_GI, ROMA_GE, ROMA_GU, ROMA_QUESTION, ROMA_WYI},
     {ROMA_NU, ROMA_NE, ROMA_XYU, ROMA_YO, ROMA_HU, 0, 0, ROMA_DAKUTEN, ROMA_DI, ROMA_VU, ROMA_ZI, ROMA_WYE},
     {ROMA_XE, ROMA_XO, ROMA_SE, ROMA_YU, ROMA_HE, 0, 0, ROMA_ZU, ROMA_DU, ROMA_COMMA, ROMA_PERIOD, ROMA_XWA},
 };
 
-static unsigned char const matrixTronRight[7][12] =
+static uint8_t const matrixTronRight[7][12] =
 {
     {ROMA_LWCB, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
     {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
@@ -280,43 +291,44 @@ static unsigned char const matrixTronRight[7][12] =
 //
 // Nicola
 //
-static unsigned char const matrixNicola[7][12] =
+static uint8_t const matrixNicola[7][12] =
 {
-    {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, ROMA_DAKUTEN},
+    {ROMA_LCB, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, ROMA_DAKUTEN},
     {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
-    {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, ROMA_TOUTEN},
+    {ROMA_RCB, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, ROMA_TOUTEN},
     {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
     {ROMA_KUTEN, ROMA_KA, ROMA_TA, ROMA_KO, ROMA_SA, 0, 0, ROMA_RA, ROMA_TI, ROMA_KU, ROMA_TU, ROMA_TOUTEN},
     {ROMA_U, ROMA_SI, ROMA_TE, ROMA_KE, ROMA_SE, 0, 0, ROMA_HA, ROMA_TO, ROMA_KI, ROMA_I, ROMA_NN},
     {ROMA_KUTEN, ROMA_HI, ROMA_SU, ROMA_HU, ROMA_HE, 0, 0, ROMA_ME, ROMA_SO, ROMA_NE, ROMA_HO, ROMA_NAKAGURO},
 };
 
-static unsigned char const matrixNicolaLeft[7][12] =
+static uint8_t const matrixNicolaLeft[7][12] =
 {
-    {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, ROMA_DAKUTEN},
+    {ROMA_LCB, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, ROMA_DAKUTEN},
     {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
-    {0, ROMA_QUESTION, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+    {ROMA_RCB, ROMA_QUESTION, 0, 0, 0, 0, 0, 0, 0, 0, 0, ROMA_TOUTEN},
     {0, ROMA_SLASH, ROMA_NAMI, ROMA_LCB, ROMA_RCB, 0, 0, ROMA_LSB, ROMA_RSB, 0, 0, 0},
     {ROMA_XA, ROMA_E, ROMA_RI, ROMA_XYA, ROMA_RE, 0, 0, ROMA_PA, ROMA_DI, ROMA_GU, ROMA_DU, ROMA_PI},
     {ROMA_WO, ROMA_A, ROMA_NA, ROMA_XYU, ROMA_MO, 0, 0, ROMA_BA, ROMA_DO, ROMA_GI, ROMA_PO, ROMA_NN},
     {ROMA_XU, ROMA_CHOUON, ROMA_RO, ROMA_YA, ROMA_XI, 0, 0, ROMA_PU, ROMA_ZO, ROMA_PE, ROMA_BO, ROMA_NAKAGURO},
 };
 
-static unsigned char const matrixNicolaRight[7][12] =
+static uint8_t const matrixNicolaRight[7][12] =
 {
     {ROMA_LWCB, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, ROMA_HANDAKU},
     {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
-    {ROMA_RWCB, ROMA_QUESTION, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+    {ROMA_RWCB, ROMA_QUESTION, 0, 0, 0, 0, 0, 0, 0, 0, 0, ROMA_TOUTEN},
     {0, ROMA_SLASH, ROMA_NAMI, ROMA_LCB, ROMA_RCB, 0, 0, ROMA_LSB, ROMA_RSB, 0, 0, 0},
     {ROMA_KUTEN, ROMA_GA, ROMA_DA, ROMA_GO, ROMA_ZA, 0, 0, ROMA_YO, ROMA_NI, ROMA_RU, ROMA_MA, ROMA_XE},
     {ROMA_VU, ROMA_ZI, ROMA_DE, ROMA_GE, ROMA_ZE, 0, 0, ROMA_MI, ROMA_O, ROMA_NO, ROMA_XYO, ROMA_XTU},
     {ROMA_KUTEN, ROMA_BI, ROMA_ZU, ROMA_BU, ROMA_BE, 0, 0, ROMA_NU, ROMA_YU, ROMA_MU, ROMA_WA, ROMA_XO},
 };
 
+#ifdef ENABLE_MTYPE
 //
 // M type
 //
-static unsigned char const matrixMtype[7][12] =
+static uint8_t const matrixMtype[7][12] =
 {
     {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
     {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
@@ -327,7 +339,7 @@ static unsigned char const matrixMtype[7][12] =
     {ROMA_EI, ROMA_X, ROMA_V, ROMA_AI, ROMA_OU, 0, 0, ROMA_G, ROMA_Z, ROMA_D, ROMA_TOUTEN, ROMA_B},
 };
 
-static unsigned char const matrixMtypeShift[7][12] =
+static uint8_t const matrixMtypeShift[7][12] =
 {
     {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
     {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
@@ -337,41 +349,64 @@ static unsigned char const matrixMtypeShift[7][12] =
     {ROMA_ENN, ROMA_UNN, ROMA_INN, ROMA_ANN, ROMA_ONN, 0, 0, ROMA_KY, ROMA_SY, ROMA_TY, ROMA_NY, ROMA_HY},
     {ROMA_ETU, ROMA_UTU, ROMA_ITU, ROMA_ATU, ROMA_OTU, 0, 0, ROMA_GY, ROMA_ZY, ROMA_DY, ROMA_KUTEN, ROMA_BY},
 };
+#endif
 
-static unsigned char const dakuonFrom[] = { KEY_K, KEY_S, KEY_T, KEY_H };
-static unsigned char const dakuonTo[] = { KEY_G, KEY_Z, KEY_D, KEY_B };
-
-static unsigned char mode;
-static unsigned char led;
-static unsigned char ime;
-
-static unsigned char sent[3];
-static unsigned char last[3];
-static unsigned char lastMod;
-
-void initKeyboardKana(void)
+//
+// JIS X 6004
+//
+static uint8_t const matrixX6004[7][12] =
 {
-    mode = eeprom_read(EEPROM_KANA);
+    {ROMA_LCB, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+    {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+    {ROMA_RCB, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, ROMA_TI},
+    {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, ROMA_NA},
+    {ROMA_SO, ROMA_KE, ROMA_SE, ROMA_TE, ROMA_XYO, 0, 0, ROMA_TU, ROMA_NN, ROMA_NO, ROMA_WO, ROMA_RI},
+    {ROMA_HA, ROMA_KA, ROMA_SI, ROMA_TO, ROMA_TA, 0, 0, ROMA_KU, ROMA_U, ROMA_I, ROMA_DAKUTEN, ROMA_KI},
+    {ROMA_SU, ROMA_KO, ROMA_NI, ROMA_SA, ROMA_A, 0, 0, ROMA_XTU, ROMA_RU, ROMA_TOUTEN, ROMA_KUTEN, ROMA_RE},
+};
+
+static uint8_t const matrixX6004Shift[7][12] =
+{
+    {ROMA_LWCB, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+    {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+    {ROMA_RWCB, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, ROMA_LCB},
+    {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, ROMA_RCB},
+    {ROMA_XA, ROMA_HANDAKU, ROMA_HO, ROMA_HU, ROMA_ME, 0, 0, ROMA_HI, ROMA_E, ROMA_MI, ROMA_YA, ROMA_NU},
+    {ROMA_XI, ROMA_HE, ROMA_RA, ROMA_XYU, ROMA_YO, 0, 0, ROMA_MA, ROMA_O, ROMA_MO, ROMA_WA, ROMA_YU},
+    {ROMA_XU, ROMA_XE, ROMA_XO, ROMA_NE, ROMA_XYA, 0, 0, ROMA_MU, ROMA_RO, ROMA_NAKAGURO, ROMA_CHOUON, ROMA_QUESTION},
+};
+
+static uint8_t const dakuonFrom[] = { KEY_K, KEY_S, KEY_T, KEY_H };
+static uint8_t const dakuonTo[] = { KEY_G, KEY_Z, KEY_D, KEY_B };
+
+static uint8_t mode;
+static uint8_t led;
+static uint8_t ime;
+static uint8_t kana_led;
+static uint8_t eisuu_mode;
+
+static uint8_t sent[3];
+static uint8_t last[3];
+static uint8_t lastMod;
+
+void loadKanaSettings(void)
+{
+    mode = ReadNvram(EEPROM_KANA);
     if (KANA_MAX < mode)
         mode = 0;
 
-    led = eeprom_read(EEPROM_LED);
+    led = ReadNvram(EEPROM_LED);
     if (LED_MAX < led)
         led = LED_DEFAULT;
 
-    ime = eeprom_read(EEPROM_IME);
+    ime = ReadNvram(EEPROM_IME);
     if (IME_MAX < ime)
         ime = 0;
 }
 
 void emitLEDName(void)
 {
-    const unsigned char* message = ledKeyNames[led];
-    for (char i = 0; i < MAX_LED_KEY_NAME; ++i) {
-        if (!message[i])
-            break;
-        emitKey(message[i]);
-    }
+    emitStringN(ledKeyNames[led], MAX_LED_KEY_NAME);
 }
 
 void switchLED(void)
@@ -379,18 +414,13 @@ void switchLED(void)
     ++led;
     if (LED_MAX < led)
         led = 0;
-    eeprom_write(EEPROM_LED, led);
+    WriteNvram(EEPROM_LED, led);
     emitLEDName();
 }
 
 void emitKanaName(void)
 {
-    const unsigned char* message = kanaKeys[mode];
-    for (char i = 0; i < MAX_KANA_KEY_NAME; ++i) {
-        if (!message[i])
-            break;
-        emitKey(message[i]);
-    }
+    emitStringN(kanaKeys[mode], MAX_KANA_KEY_NAME);
 }
 
 void switchKana(void)
@@ -398,18 +428,13 @@ void switchKana(void)
     ++mode;
     if (KANA_MAX < mode)
         mode = 0;
-    eeprom_write(EEPROM_KANA, mode);
+    WriteNvram(EEPROM_KANA, mode);
     emitKanaName();
 }
 
 void emitIMEName(void)
 {
-    const unsigned char* message = imeKeyNames[ime];
-    for (char i = 0; i < MAX_IME_KEY_NAME; ++i) {
-        if (!message[i])
-            break;
-        emitKey(message[i]);
-    }
+    emitStringN(imeKeyNames[ime], MAX_IME_KEY_NAME);
 }
 
 void switchIME(void)
@@ -417,14 +442,14 @@ void switchIME(void)
     ++ime;
     if (IME_MAX < ime)
         ime = 0;
-    eeprom_write(EEPROM_IME, ime);
+    WriteNvram(EEPROM_IME, ime);
     emitIMEName();
 }
 
-static void processRomaji(unsigned char roma, unsigned char a[])
+static void processRomaji(uint8_t roma, uint8_t a[])
 {
-    unsigned char const* c;
-    char i;
+    uint8_t const* c;
+    uint8_t i;
 
     if (roma < ROMA_ANN) {
         c = consonantSet[roma / 7];
@@ -435,33 +460,36 @@ static void processRomaji(unsigned char roma, unsigned char a[])
             a[i++] = 0;
         return;
     }
+#ifdef ENABLE_MTYPE
     if (ROMA_ANN <= roma && roma <= ROMA_Q) {
         memcpy(a, mtypeSet[roma - ROMA_ANN], 3);
         return;
     }
-    if (ROMA_NN <= roma && roma <= KANA_CHOUON) {
+#endif
+    if (ROMA_NN <= roma && roma <= ROMA_BANG) {
         memcpy(a, commonSet[roma - ROMA_NN], 2);
         a[2] = 0;
         return;
     }
     if (ROMA_LCB <= roma && roma <= ROMA_NAMI) {
+        i = roma - ROMA_LCB;
         switch (ime) {
         case IME_GOOGLE:
-            c = googleSet[roma - ROMA_LCB];
+            c = googleSet[i];
             break;
         case IME_APPLE:
-            c = appleSet[roma - ROMA_LCB];
+            c = appleSet[i];
             break;
         case IME_ATOK:
-            c = atokSet[roma - ROMA_LCB];
+            c = atokSet[i];
             break;
         case IME_MS:
         default:
-            c = msSet[roma - ROMA_LCB];
+            c = msSet[i];
             break;
         }
         for (i = 0; i < 3; ++i) {
-            unsigned char key = c[i];
+            uint8_t key = c[i];
             if (isJP()) {
                 switch (key) {
                 case KEY_LEFT_BRACKET:
@@ -490,22 +518,24 @@ static void processRomaji(unsigned char roma, unsigned char a[])
     memset(a, 0, 3);
 }
 
-static char processKana(const unsigned char* current, const unsigned char* processed, unsigned char* report,
-                        const unsigned char base[][12], const unsigned char left[][12], const unsigned char right[][12])
+static int8_t processKana(const uint8_t* current, const uint8_t* processed, uint8_t* report,
+                          const uint8_t base[][12], const uint8_t left[][12], const uint8_t right[][12])
 {
-    unsigned char mod = current[0];
-    unsigned char modifiers;
-    unsigned char key;
-    unsigned char count = 2;
-    unsigned char roma;
-    unsigned char a[3];
-    const unsigned char* dakuon;
-    char xmit = XMIT_NORMAL;
+    uint8_t mod = current[0];
+    uint8_t modifiers;
+    uint8_t key;
+    uint8_t count = 2;
+    uint8_t roma;
+    uint8_t a[3];
+    const uint8_t* dakuon;
+    int8_t xmit = XMIT_NORMAL;
 
     modifiers = current[0] & ~MOD_SHIFT;
     report[0] = modifiers;
-    for (char i = 2; i < 8 && count < 8; ++i) {
-        unsigned char code = current[i];
+    for (int8_t i = 2; i < 8 && count < 8; ++i) {
+        uint8_t code = current[i];
+        uint8_t row = code / 12;
+        uint8_t column = code % 12;
 
         key = getKeyNumLock(code);
         if (key) {
@@ -516,13 +546,7 @@ static char processKana(const unsigned char* current, const unsigned char* proce
             continue;
         }
 
-        unsigned char no_repeat = 12 * 4 <= code && code < 12 * 7  && code % 12 != 5 && code % 12 != 6;
-        for (char j = 2; j < 8; ++j) {
-            if (no_repeat && code == processed[j]) {
-                code = VOID_KEY;
-                break;
-            }
-        }
+        uint8_t no_repeat = 0;
         if ((mod & MOD_SHIFT) == MOD_SHIFT) {
             if (lastMod & MOD_LEFTSHIFT)
                 mod &= ~MOD_LEFTSHIFT;
@@ -530,28 +554,32 @@ static char processKana(const unsigned char* current, const unsigned char* proce
                 mod &= ~MOD_RIGHTSHIFT;
         }
 
-        if (7 <= code / 12)
+        if (7 <= row)
             roma = 0;
         else if (mod & MOD_LEFTSHIFT)
-            roma = left[code / 12][code % 12];
+            roma = left[row][column];
         else if (mod & MOD_RIGHTSHIFT)
-            roma = right[code / 12][code % 12];
+            roma = right[row][column];
         else
-            roma = base[code / 12][code % 12];
+            roma = base[row][column];
+        if (roma && (roma < KANA_DAKUTEN || KANA_CHOUON < roma)) {
+            no_repeat = 1;
+            for (int8_t j = 2; j < 8; ++j) {
+                if (code == processed[j]) {
+                    code = VOID_KEY;
+                    row = VOID_KEY / 12;
+                    column = VOID_KEY % 12;
+                    roma = 0;
+                    break;
+                }
+            }
+        }
         if (roma)
             processRomaji(roma, a);
         if (!roma || !a[0]) {
             key = getKeyBase(code);
             if (key) {
-                if (key == KEY_LANG1)
-                    kana_led = 1;
-                else if (key == KEY_LANG2)
-                    kana_led = 0;
-                else if (key == KEY_CAPS_LOCK) {
-                    if (!memchr(processed + 2, key, 6) && isJP())
-                        eisuu_mode ^= 1;
-                } else if (key == KEY_0 && (mod & MOD_SHIFT) && isJP())
-                    key = KEY_INTERNATIONAL1;
+                key = toggleKanaMode(key, current[0], !memchr(processed + 2, key, 6));
                 report[count++] = key;
                 memset(last, 0, 3);
                 lastMod = current[0];
@@ -560,8 +588,8 @@ static char processKana(const unsigned char* current, const unsigned char* proce
             continue;
         }
         if (no_repeat) {
-            for (char i = 0; i < 3 && sent[i]; ++i) {
-                for (char j = 0; j < 3 && a[j]; ++j) {
+            for (int8_t i = 0; i < 3 && sent[i]; ++i) {
+                for (int8_t j = 0; j < 3 && a[j]; ++j) {
                     if (sent[i] == a[j]) {
                         memset(sent, 0, 3);
                         return XMIT_BRK;
@@ -570,7 +598,7 @@ static char processKana(const unsigned char* current, const unsigned char* proce
             }
         }
         xmit = XMIT_IN_ORDER;
-        for (char i = 0; i < 3 && a[i] && count < 8; ++i) {
+        for (int8_t i = 0; i < 3 && a[i] && count < 8; ++i) {
             key = a[i];
             switch (key) {
             case KEY_DAKUTEN:
@@ -616,28 +644,58 @@ static char processKana(const unsigned char* current, const unsigned char* proce
     return xmit;
 }
 
-char isKanaMode(const unsigned char* current)
+int8_t isKanaMode(const uint8_t* current)
 {
-    return kana_led && !(current[0] & (MOD_ALT | MOD_CONTROL | MOD_GUI)) && mode != KANA_ROMAJI;
+    return kana_led && !(current[0] & (MOD_ALT | MOD_CONTROL | MOD_GUI)) && !(current[1] & (MOD_FN | MOD_PAD)) && mode != KANA_ROMAJI && (!eisuu_mode || !is109());
 }
 
-char processKeysKana(const unsigned char* current, const unsigned char* processed, unsigned char* report)
+uint8_t toggleKanaMode(uint8_t key, uint8_t mod, int8_t make)
+{
+    switch (key) {
+    case KEY_LANG1:
+        kana_led = 1;
+        break;
+    case KEY_LANG2:
+        kana_led = 0;
+        prefix = 0;
+        break;
+    case KEY_CAPS_LOCK:
+        if (make && isJP())
+            eisuu_mode ^= 1;
+        break;
+    case KEY_0:
+        if ((mod & MOD_SHIFT) && isJP())
+            key = KEY_INTERNATIONAL1;
+        break;
+    default:
+        break;
+    }
+    return key;
+}
+
+int8_t processKeysKana(const uint8_t* current, const uint8_t* processed, uint8_t* report)
 {
     switch (mode) {
     case KANA_TRON:
         return processKana(current, processed, report, matrixTron, matrixTronLeft, matrixTronRight);
     case KANA_NICOLA:
         return processKana(current, processed, report, matrixNicola, matrixNicolaLeft, matrixNicolaRight);
+#ifdef ENABLE_MTYPE
     case KANA_MTYPE:
         return processKana(current, processed, report, matrixMtype, matrixMtypeShift, matrixMtypeShift);
+#endif
+#ifdef ENABLE_STICKNEY
     case KANA_STICKNEY:
         return processKana(current, processed, report, matrixStickney, matrixStickneyShift, matrixStickneyShift);
+#endif
+    case KANA_X6004:
+        return processKana(current, processed, report, matrixX6004, matrixX6004Shift, matrixX6004Shift);
     default:
         return processKeysBase(current, processed, report);
     }
 }
 
-unsigned char controlKanaLED(unsigned char report)
+uint8_t controlKanaLED(uint8_t report)
 {
     if (mode != KANA_ROMAJI) {
         switch (led) {
@@ -655,6 +713,13 @@ unsigned char controlKanaLED(unsigned char report)
         default:
             break;
         }
+        if (prefix_shift == PREFIXSHIFT_LED) {
+            if (prefix & MOD_LEFTSHIFT)
+                report |= LED_NUM_LOCK;
+            if (prefix & MOD_RIGHTSHIFT)
+                report |= LED_SCROLL_LOCK;
+        }
+
     }
     return report;
 }
